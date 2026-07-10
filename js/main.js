@@ -131,3 +131,108 @@
     });
   }
 })();
+
+// Micro-animations: navbar density on scroll, scroll-reveal, hero-stats count-up.
+// Separate IIFE so the form/menu logic above stays untouched.
+(function () {
+  // Marks JS as running; CSS only hides [data-reveal] elements under .js,
+  // so content stays fully visible if this script never runs.
+  document.documentElement.classList.add('js');
+
+  var prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  // ---- Sticky navbar: denser background once the page has scrolled ----
+  var siteHeader = document.querySelector('.site-header');
+  if (siteHeader) {
+    var headerTicking = false;
+    var updateHeaderState = function () {
+      siteHeader.classList.toggle('scrolled', window.scrollY > 10);
+      headerTicking = false;
+    };
+    window.addEventListener('scroll', function () {
+      if (!headerTicking) {
+        window.requestAnimationFrame(updateHeaderState);
+        headerTicking = true;
+      }
+    }, { passive: true });
+    updateHeaderState();
+  }
+
+  // ---- Scroll reveal (sections + cards) and hero-stats count-up ----
+  // A single shared IntersectionObserver drives both; each target is
+  // unobserved right after it fires, and the observer disconnects once
+  // nothing is left to watch.
+  if ('IntersectionObserver' in window) {
+    var revealEls = document.querySelectorAll(
+      '.catalog-section, .about-section, .portfolio-section, .why-section, .contacts-section, .cat-card, .pf-card, .why-card'
+    );
+    revealEls.forEach(function (el) {
+      el.setAttribute('data-reveal', '');
+    });
+
+    var stagger = function (list, stepMs) {
+      list.forEach(function (el, i) {
+        el.style.transitionDelay = (i * stepMs) + 'ms';
+      });
+    };
+    stagger(document.querySelectorAll('.cat3 .cat-card'), 90);
+    stagger(document.querySelectorAll('.pf .pf-card'), 70);
+    stagger(document.querySelectorAll('.why2 .why-card'), 90);
+
+    var statsEl = document.querySelector('.hero-stats');
+
+    // Counts up by rewriting only the leading text node, so a trailing
+    // element like the "+" in "340+" is never touched.
+    var animateCount = function (textNode, target, duration) {
+      textNode.nodeValue = '0';
+      var start = null;
+      var step = function (timestamp) {
+        if (start === null) start = timestamp;
+        var progress = Math.min((timestamp - start) / duration, 1);
+        var eased = 1 - Math.pow(1 - progress, 3);
+        textNode.nodeValue = String(Math.round(eased * target));
+        if (progress < 1) {
+          window.requestAnimationFrame(step);
+        }
+      };
+      window.requestAnimationFrame(step);
+    };
+
+    var animateStats = function () {
+      statsEl.querySelectorAll('.stat-num').forEach(function (el) {
+        var target = parseInt(el.textContent, 10);
+        var textNode = el.childNodes[0];
+        if (isNaN(target) || !textNode) return;
+        if (prefersReducedMotion) {
+          textNode.nodeValue = String(target);
+        } else {
+          animateCount(textNode, target, 1400);
+        }
+      });
+    };
+
+    var pending = revealEls.length + (statsEl ? 1 : 0);
+    var revealObserver = new IntersectionObserver(function (entries) {
+      entries.forEach(function (entry) {
+        if (!entry.isIntersecting) return;
+        if (entry.target === statsEl) {
+          animateStats();
+        } else {
+          entry.target.classList.add('is-visible');
+        }
+        revealObserver.unobserve(entry.target);
+        pending -= 1;
+      });
+      if (pending <= 0) {
+        revealObserver.disconnect();
+      }
+    }, { threshold: 0.15, rootMargin: '0px 0px -60px 0px' });
+
+    revealEls.forEach(function (el) {
+      revealObserver.observe(el);
+    });
+    if (statsEl) {
+      revealObserver.observe(statsEl);
+    }
+  }
+})();
