@@ -110,6 +110,7 @@
       var payload = {
         name: contactForm.name.value,
         contact: contactForm.contact.value,
+        email: contactForm.email.value,
         type: contactForm.type.value,
         msg: contactForm.msg.value,
       };
