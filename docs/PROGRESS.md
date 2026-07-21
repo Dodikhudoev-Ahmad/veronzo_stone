@@ -11,6 +11,7 @@
 - [x] Endpoint POST /api/contact — имя/телефон/email/материал/описание проекта
 - [x] Валидация (FluentValidation) — `Validators/ContactRequestValidator.cs`
 - [x] Отправка заявки: решено — оба варианта: сохранение в SQLite (`ContactRequests`, EF Core, миграция `InitialCreate`) + email-уведомление через SMTP (MailKit, `Services/SmtpEmailSender.cs`)
+- [x] Исправлена блокировка ответа на ~2 мин из-за синхронного ожидания SMTP: сохранение в БД остаётся синхронным, email теперь уходит в фоновую очередь (`IEmailNotificationQueue` + `EmailNotificationBackgroundService`, Channel-based) — `POST /api/contact` отвечает сразу после записи в БД; ошибка SMTP только логируется и не влияет на response
 - [x] CORS — разрешён домен veronzotj.netlify.app (настраивается через `Cors:AllowedOrigins` в appsettings)
 - [x] Деплой выбран: Railway. Конфиг готов — `backend/VeronzoApi/Dockerfile`, `railway.json`, `backend/README.md` (пошаговая инструкция: root directory, env vars, volume для SQLite, домен). Сам деплой (создание проекта, подключение репо, ввод SMTP-креденшлов) выполняет пользователь — агент не имеет доступа к Railway-аккаунту
 - [x] fetch() подключён в `js/main.js` (`CONTACT_API_URL`, обработка успеха/ошибки, disable кнопки на время отправки) — проверено в реальном браузере (Playwright) на локальном API: успешная отправка показывает "Заявка отправлена" и очищает форму, недоступность API показывает блок ошибки. **Осталось**: заменить плейсхолдер `CONTACT_API_URL` на реальный домен после генерации в Railway

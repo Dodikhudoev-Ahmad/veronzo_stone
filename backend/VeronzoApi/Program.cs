@@ -25,6 +25,8 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 
 builder.Services.Configure<SmtpOptions>(builder.Configuration.GetSection(SmtpOptions.SectionName));
 builder.Services.AddScoped<IEmailSender, SmtpEmailSender>();
+builder.Services.AddSingleton<IEmailNotificationQueue, EmailNotificationQueue>();
+builder.Services.AddHostedService<EmailNotificationBackgroundService>();
 
 builder.Services.AddValidatorsFromAssemblyContaining<ContactRequestValidator>();
 
@@ -62,7 +64,7 @@ app.MapPost("/api/contact", async (
         ContactRequestDto dto,
         IValidator<ContactRequestDto> validator,
         AppDbContext db,
-        IEmailSender emailSender,
+        IEmailNotificationQueue emailQueue,
         CancellationToken cancellationToken) =>
     {
         var validationResult = await validator.ValidateAsync(dto, cancellationToken);
@@ -84,7 +86,8 @@ app.MapPost("/api/contact", async (
         db.ContactRequests.Add(entity);
         await db.SaveChangesAsync(cancellationToken);
 
-        await emailSender.SendContactNotificationAsync(entity, cancellationToken);
+        // Enqueued for the background service — the response must not wait on SMTP.
+        emailQueue.Enqueue(entity);
 
         return Results.Created($"/api/contact/{entity.Id}", new { entity.Id });
     })
