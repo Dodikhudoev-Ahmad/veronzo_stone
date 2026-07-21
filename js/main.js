@@ -1,6 +1,5 @@
-// Backend API base URL. Update this once the Railway domain is generated
-// (Settings → Networking → Generate Domain in the Railway project).
-var CONTACT_API_URL = 'https://veronzo-api.up.railway.app/api/contact';
+// Backend API base URL (Railway production domain).
+var CONTACT_API_URL = 'https://veronzostone-production.up.railway.app/api/contact';
 
 (function () {
   // Mobile hamburger menu
