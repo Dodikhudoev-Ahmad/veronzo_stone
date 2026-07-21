@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(//Applications/**)",
+      "Bash(python3 -c \"import playwright\")",
+      "Bash(npx --yes playwright --version)",
+      "Bash(npx --yes playwright install chromium --with-deps)",
+      "Bash(npx playwright *)",
+      "Read(//Users/burble/Library/Caches/ms-playwright/**)",
+      "Bash(find / -maxdepth 4 -iname \"*playwright*\" -path \"*Caches*\")"
+    ]
+  }
+}
