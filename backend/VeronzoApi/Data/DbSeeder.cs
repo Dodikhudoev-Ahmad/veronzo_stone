@@ -1,10 +1,53 @@
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 using VeronzoApi.Models;
 
 namespace VeronzoApi.Data;
 
 public static class DbSeeder
 {
+    // Creates the first admin account, but only from explicit configuration — never
+    // from a hardcoded default — so the app can't accidentally ship a known password.
+    // Re-running this after an admin already exists is a no-op: it neither recreates
+    // nor resets the existing account's password.
+    public static async Task SeedAdminUserAsync(
+        AppDbContext db, IPasswordHasher<AdminUser> passwordHasher, IConfiguration configuration, ILogger logger)
+    {
+        if (await db.AdminUsers.AnyAsync())
+        {
+            return;
+        }
+
+        var email = configuration["DEFAULT_ADMIN_EMAIL"];
+        var password = configuration["DEFAULT_ADMIN_PASSWORD"];
+
+        if (string.IsNullOrWhiteSpace(email) || string.IsNullOrWhiteSpace(password))
+        {
+            logger.LogWarning(
+                "No admin account exists and DEFAULT_ADMIN_EMAIL/DEFAULT_ADMIN_PASSWORD are not set — " +
+                "skipping admin creation. Set both environment variables and restart to create the first administrator.");
+            return;
+        }
+
+        var trimmedEmail = email.Trim();
+        var admin = new AdminUser
+        {
+            Email = trimmedEmail,
+            NormalizedEmail = trimmedEmail.ToUpperInvariant(),
+            Role = "Admin",
+            IsActive = true,
+            CreatedAt = DateTime.UtcNow,
+            UpdatedAt = DateTime.UtcNow
+        };
+        admin.PasswordHash = passwordHasher.HashPassword(admin, password);
+
+        db.AdminUsers.Add(admin);
+        await db.SaveChangesAsync();
+        logger.LogInformation("Created initial admin account for {Email}", admin.Email);
+    }
+
     // Seeds catalog/content tables with the copy currently hardcoded in index.html,
     // so the managed content starts out identical to what is live today.
     //

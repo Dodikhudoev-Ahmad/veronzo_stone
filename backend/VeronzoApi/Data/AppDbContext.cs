@@ -14,11 +14,23 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     public DbSet<SocialLink> SocialLinks => Set<SocialLink>();
     public DbSet<ContactInfo> ContactInfos => Set<ContactInfo>();
     public DbSet<SeoMeta> SeoMetas => Set<SeoMeta>();
+    public DbSet<AdminUser> AdminUsers => Set<AdminUser>();
+    public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<Category>().HasIndex(c => c.Slug).IsUnique();
         modelBuilder.Entity<SiteContent>().HasIndex(c => c.Key).IsUnique();
         modelBuilder.Entity<SeoMeta>().HasIndex(s => s.PageKey).IsUnique();
+
+        modelBuilder.Entity<AdminUser>().HasIndex(a => a.NormalizedEmail).IsUnique();
+
+        modelBuilder.Entity<RefreshToken>().HasIndex(r => r.TokenHash).IsUnique();
+        modelBuilder.Entity<RefreshToken>().HasIndex(r => r.AdminUserId);
+        modelBuilder.Entity<RefreshToken>()
+            .HasOne(r => r.AdminUser)
+            .WithMany()
+            .HasForeignKey(r => r.AdminUserId)
+            .OnDelete(DeleteBehavior.Cascade);
     }
 }
