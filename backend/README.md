@@ -10,14 +10,12 @@
 |---|---|
 | `ConnectionStrings__Default` | не задавать — при наличии volume путь строится автоматически из `RAILWAY_VOLUME_MOUNT_PATH` |
 | `Cors__AllowedOrigins__0` | `https://veronzotj.netlify.app` |
-| `Smtp__Host` | адрес SMTP-сервера |
-| `Smtp__Port` | обычно `587` |
-| `Smtp__UseStartTls` | `true` |
-| `Smtp__User` | логин SMTP |
-| `Smtp__Password` | пароль/app-password SMTP |
-| `Smtp__FromAddress` | адрес отправителя, например `no-reply@veronzo.ru` |
-| `Smtp__FromName` | `Veronzo — сайт` |
-| `Smtp__NotifyToAddress` | куда присылать уведомления о заявках |
+| `Resend__ApiKey` | API-ключ из [resend.com](https://resend.com) (Dashboard → API Keys) |
+| `Resend__FromAddress` | адрес отправителя, например `no-reply@veronzo.ru` (домен должен быть подтверждён в Resend) |
+| `Resend__FromName` | `Veronzo — сайт` |
+| `Resend__NotifyToAddress` | куда присылать уведомления о заявках |
+
+> Раньше здесь были `Smtp__*` переменные (MailKit/SMTP) — Railway блокирует исходящий SMTP на нашем плане, поэтому отправка переведена на Resend HTTP API. Если старые `Smtp__*` переменные ещё стоят в Railway — их можно удалить, код их больше не читает.
 
 ## 3. Volume для SQLite (сохраняет заявки между деплоями)
 - Settings → Volumes → Add Volume
