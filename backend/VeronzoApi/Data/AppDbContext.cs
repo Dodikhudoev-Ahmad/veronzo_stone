@@ -32,5 +32,9 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
             .WithMany()
             .HasForeignKey(r => r.AdminUserId)
             .OnDelete(DeleteBehavior.Cascade);
+
+        // Explicit DB-level default so the migration adding this column defaults
+        // existing rows to visible, not hidden.
+        modelBuilder.Entity<HeroStat>().Property(h => h.IsVisible).HasDefaultValue(true);
     }
 }

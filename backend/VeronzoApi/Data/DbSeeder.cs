@@ -197,7 +197,7 @@ public static class DbSeeder
             return;
         }
 
-        db.HeroStats.Add(new HeroStat { Label = label, Value = value, Suffix = suffix, SortOrder = sortOrder });
+        db.HeroStats.Add(new HeroStat { Label = label, Value = value, Suffix = suffix, SortOrder = sortOrder, IsVisible = true });
         await db.SaveChangesAsync();
     }
 

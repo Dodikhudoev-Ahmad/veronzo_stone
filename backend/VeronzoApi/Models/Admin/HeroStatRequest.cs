@@ -1,3 +1,3 @@
 namespace VeronzoApi.Models.Admin;
 
-public record HeroStatRequest(string Label, int Value, string? Suffix, int SortOrder);
+public record HeroStatRequest(string Label, int Value, string? Suffix, int SortOrder, bool IsVisible);

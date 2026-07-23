@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using FluentValidation;
 using Microsoft.EntityFrameworkCore;
 using VeronzoApi.Data;
@@ -8,32 +9,72 @@ namespace VeronzoApi.Endpoints.Admin;
 
 public static class AdminSeoMetaEndpoints
 {
+    private static readonly IReadOnlyDictionary<string, Func<SeoMeta, IComparable>> SortWhitelist =
+        new Dictionary<string, Func<SeoMeta, IComparable>>
+        {
+            ["id"] = s => s.Id,
+            ["pageKey"] = s => s.PageKey,
+            ["title"] = s => s.Title
+        };
+
     public static void MapAdminSeoMetaEndpoints(this WebApplication app)
     {
         var group = app.MapGroup("/api/admin/seo-meta").RequireAuthorization(policy => policy.RequireRole("Admin"));
 
-        group.MapGet("", ListAsync);
-        group.MapGet("/{id:int}", GetByIdAsync);
-        group.MapPost("", CreateAsync);
-        group.MapPut("/{id:int}", UpdateAsync);
-        group.MapDelete("/{id:int}", DeleteAsync);
+        group.MapGet("", ListAsync)
+            .WithSummary("List SEO meta entries")
+            .WithDescription("Paginated, sortable list of per-page SEO metadata.")
+            .Produces<PagedResult<SeoMetaResponse>>(StatusCodes.Status200OK)
+            .WithAdminAuthResponses();
+
+        group.MapGet("/{id:int}", GetByIdAsync)
+            .WithSummary("Get SEO meta entry by id")
+            .Produces<SeoMetaResponse>(StatusCodes.Status200OK)
+            .Produces<ApiErrorResponse>(StatusCodes.Status404NotFound)
+            .WithAdminAuthResponses();
+
+        group.MapPost("", CreateAsync)
+            .WithSummary("Create SEO meta entry")
+            .WithDescription("PageKey must be unique.")
+            .Produces<SeoMetaResponse>(StatusCodes.Status201Created)
+            .ProducesValidationProblem()
+            .Produces<ApiErrorResponse>(StatusCodes.Status409Conflict)
+            .WithAdminAuthResponses();
+
+        group.MapPut("/{id:int}", UpdateAsync)
+            .WithSummary("Update SEO meta entry")
+            .Produces<SeoMetaResponse>(StatusCodes.Status200OK)
+            .ProducesValidationProblem()
+            .Produces<ApiErrorResponse>(StatusCodes.Status404NotFound)
+            .Produces<ApiErrorResponse>(StatusCodes.Status409Conflict)
+            .WithAdminAuthResponses();
+
+        group.MapDelete("/{id:int}", DeleteAsync)
+            .WithSummary("Delete SEO meta entry")
+            .Produces(StatusCodes.Status204NoContent)
+            .Produces<ApiErrorResponse>(StatusCodes.Status404NotFound)
+            .WithAdminAuthResponses();
     }
 
-    // SeoMeta has no SortOrder field — ordered by Id only.
-    private static async Task<IResult> ListAsync(AppDbContext db, CancellationToken cancellationToken)
+    private static async Task<IResult> ListAsync(
+        int? page, int? pageSize, string? sort, AppDbContext db, CancellationToken cancellationToken)
     {
-        var items = await db.SeoMetas.OrderBy(s => s.Id).ToListAsync(cancellationToken);
-        return Results.Ok(items.Select(ToResponse));
+        var (p, ps) = AdminEndpointHelpers.NormalizePaging(page, pageSize);
+        var items = await db.SeoMetas.ToListAsync(cancellationToken);
+
+        var ordered = AdminEndpointHelpers.ApplySort(items, sort, SortWhitelist, "id").ThenBy(x => x.Id);
+        return Results.Ok(AdminEndpointHelpers.Paginate(ordered, p, ps, ToResponse));
     }
 
     private static async Task<IResult> GetByIdAsync(int id, AppDbContext db, CancellationToken cancellationToken)
     {
         var item = await db.SeoMetas.FindAsync(new object[] { id }, cancellationToken);
-        return item is null ? Results.NotFound(new { error = "SEO meta not found" }) : Results.Ok(ToResponse(item));
+        return item is null ? Results.NotFound(new ApiErrorResponse("SEO meta not found")) : Results.Ok(ToResponse(item));
     }
 
     private static async Task<IResult> CreateAsync(
-        SeoMetaRequest request, IValidator<SeoMetaRequest> validator, AppDbContext db, CancellationToken cancellationToken)
+        SeoMetaRequest request, IValidator<SeoMetaRequest> validator, AppDbContext db,
+        ClaimsPrincipal user, ILogger<Program> logger, CancellationToken cancellationToken)
     {
         var validation = await validator.ValidateAsync(request, cancellationToken);
         if (!validation.IsValid)
@@ -43,7 +84,7 @@ public static class AdminSeoMetaEndpoints
 
         if (await db.SeoMetas.AnyAsync(s => s.PageKey == request.PageKey, cancellationToken))
         {
-            return Results.Conflict(new { error = "An SEO entry with this PageKey already exists" });
+            return Results.Conflict(new ApiErrorResponse("An SEO entry with this PageKey already exists"));
         }
 
         var item = new SeoMeta
@@ -61,11 +102,13 @@ public static class AdminSeoMetaEndpoints
             return conflict;
         }
 
+        AdminEndpointHelpers.LogAudit(logger, user, "Create", nameof(SeoMeta), item.Id);
         return Results.Created($"/api/admin/seo-meta/{item.Id}", ToResponse(item));
     }
 
     private static async Task<IResult> UpdateAsync(
-        int id, SeoMetaRequest request, IValidator<SeoMetaRequest> validator, AppDbContext db, CancellationToken cancellationToken)
+        int id, SeoMetaRequest request, IValidator<SeoMetaRequest> validator, AppDbContext db,
+        ClaimsPrincipal user, ILogger<Program> logger, CancellationToken cancellationToken)
     {
         var validation = await validator.ValidateAsync(request, cancellationToken);
         if (!validation.IsValid)
@@ -76,12 +119,12 @@ public static class AdminSeoMetaEndpoints
         var item = await db.SeoMetas.FindAsync(new object[] { id }, cancellationToken);
         if (item is null)
         {
-            return Results.NotFound(new { error = "SEO meta not found" });
+            return Results.NotFound(new ApiErrorResponse("SEO meta not found"));
         }
 
         if (await db.SeoMetas.AnyAsync(s => s.PageKey == request.PageKey && s.Id != id, cancellationToken))
         {
-            return Results.Conflict(new { error = "An SEO entry with this PageKey already exists" });
+            return Results.Conflict(new ApiErrorResponse("An SEO entry with this PageKey already exists"));
         }
 
         item.PageKey = request.PageKey;
@@ -95,15 +138,17 @@ public static class AdminSeoMetaEndpoints
             return conflict;
         }
 
+        AdminEndpointHelpers.LogAudit(logger, user, "Update", nameof(SeoMeta), item.Id);
         return Results.Ok(ToResponse(item));
     }
 
-    private static async Task<IResult> DeleteAsync(int id, AppDbContext db, CancellationToken cancellationToken)
+    private static async Task<IResult> DeleteAsync(
+        int id, AppDbContext db, ClaimsPrincipal user, ILogger<Program> logger, CancellationToken cancellationToken)
     {
         var item = await db.SeoMetas.FindAsync(new object[] { id }, cancellationToken);
         if (item is null)
         {
-            return Results.NotFound(new { error = "SEO meta not found" });
+            return Results.NotFound(new ApiErrorResponse("SEO meta not found"));
         }
 
         db.SeoMetas.Remove(item);
@@ -114,6 +159,7 @@ public static class AdminSeoMetaEndpoints
             return conflict;
         }
 
+        AdminEndpointHelpers.LogAudit(logger, user, "Delete", nameof(SeoMeta), id);
         return Results.NoContent();
     }
 
