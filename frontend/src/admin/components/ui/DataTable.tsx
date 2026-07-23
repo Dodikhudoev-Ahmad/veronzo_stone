@@ -36,36 +36,66 @@ export function DataTable<T>({ columns, rows, getRowId, sort, onSortChange }: Da
     }
   }
 
+  function ariaSortFor(column: DataTableColumn<T>): 'ascending' | 'descending' | 'none' | undefined {
+    if (!column.sortable) return undefined;
+    if (sort === column.key) return 'ascending';
+    if (sort === `-${column.key}`) return 'descending';
+    return 'none';
+  }
+
+  function nextDirectionLabel(column: DataTableColumn<T>): string {
+    // Mirrors handleHeaderClick's own toggle logic: ascending is the only
+    // state whose next click goes to descending — every other state (none or
+    // already descending) goes to ascending next.
+    return sort === column.key ? 'по убыванию' : 'по возрастанию';
+  }
+
   return (
-    <table className="w-full border-collapse text-sm">
-      <thead>
-        <tr className="border-b border-cream-soft text-left text-xs uppercase tracking-wide text-muted">
-          {columns.map((column) => (
-            <th
-              key={column.key}
-              scope="col"
-              className={`py-3 pr-4 font-semibold ${column.align === 'right' ? 'text-right' : 'text-left'} ${
-                column.sortable ? 'cursor-pointer select-none hover:text-text' : ''
-              }`}
-              onClick={() => handleHeaderClick(column)}
-            >
-              {column.label}
-              {column.sortable && <span className="ml-1">{sortIndicator(column.key)}</span>}
-            </th>
-          ))}
-        </tr>
-      </thead>
-      <tbody>
-        {rows.map((row) => (
-          <tr key={getRowId(row)} className="border-b border-cream-soft/60 last:border-0">
+    // Horizontal scroll container — added for Portfolio's wider column set
+    // (image + title + meta + tag + sortOrder + visibility + actions), but
+    // purely additive: no prop/behavior change, so Categories/Products keep
+    // rendering exactly as before, just now inside a scrollable wrapper on
+    // narrow viewports instead of overflowing the page.
+    <div className="overflow-x-auto">
+      <table className="w-full min-w-max border-collapse text-sm">
+        <thead>
+          <tr className="border-b border-cream-soft text-left text-xs uppercase tracking-wide text-muted">
             {columns.map((column) => (
-              <td key={column.key} className={`py-3 pr-4 ${column.align === 'right' ? 'text-right' : 'text-left'}`}>
-                {column.render(row)}
-              </td>
+              <th
+                key={column.key}
+                scope="col"
+                aria-sort={ariaSortFor(column)}
+                className={`py-3 pr-4 font-semibold ${column.align === 'right' ? 'text-right' : 'text-left'}`}
+              >
+                {column.sortable ? (
+                  <button
+                    type="button"
+                    onClick={() => handleHeaderClick(column)}
+                    aria-label={`Сортировать по «${column.label}» ${nextDirectionLabel(column)}`}
+                    className="inline-flex cursor-pointer items-center gap-1 rounded-sm border-0 bg-transparent p-0 font-semibold text-inherit hover:text-text focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-light"
+                  >
+                    {column.label}
+                    <span aria-hidden="true">{sortIndicator(column.key)}</span>
+                  </button>
+                ) : (
+                  column.label
+                )}
+              </th>
             ))}
           </tr>
-        ))}
-      </tbody>
-    </table>
+        </thead>
+        <tbody>
+          {rows.map((row) => (
+            <tr key={getRowId(row)} className="border-b border-cream-soft/60 last:border-0">
+              {columns.map((column) => (
+                <td key={column.key} className={`py-3 pr-4 ${column.align === 'right' ? 'text-right' : 'text-left'}`}>
+                  {column.render(row)}
+                </td>
+              ))}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
   );
 }
