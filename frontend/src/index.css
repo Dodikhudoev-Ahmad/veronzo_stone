@@ -1,0 +1,39 @@
+@import "tailwindcss";
+
+/*
+ * Design tokens copied verbatim from ../css/style.css (the public site's
+ * design system) so the admin panel shares the same premium palette/type
+ * scale instead of inventing a new one. Keep these two files in sync if the
+ * public site's tokens change.
+ */
+@theme {
+  --color-text: #1b1813;
+  --color-bg: #f1eee7;
+  --color-bg-alt: #fbfaf7;
+  --color-accent: #2f4638;
+  --color-accent-light: #8fae98;
+  --color-muted: #817a6d;
+  --color-cream: #f4f1ea;
+  --color-cream-soft: #e2ddd1;
+  --color-nav-muted: #b8b2a5;
+  --color-eyebrow: #4d6b57;
+  --color-footer-muted: #8a8478;
+  --color-dark: #141209;
+  --color-error: #a65847;
+
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 16px;
+  --radius-pill: 999px;
+
+  --font-serif: 'Cormorant Garamond', serif;
+  --font-sans: 'Manrope', system-ui, sans-serif;
+}
+
+body {
+  margin: 0;
+  background-color: var(--color-bg);
+  color: var(--color-text);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
