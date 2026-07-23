@@ -9,6 +9,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     public DbSet<Category> Categories => Set<Category>();
     public DbSet<Product> Products => Set<Product>();
     public DbSet<PortfolioItem> PortfolioItems => Set<PortfolioItem>();
+    public DbSet<GalleryItem> GalleryItems => Set<GalleryItem>();
     public DbSet<SiteContent> SiteContents => Set<SiteContent>();
     public DbSet<HeroStat> HeroStats => Set<HeroStat>();
     public DbSet<SocialLink> SocialLinks => Set<SocialLink>();

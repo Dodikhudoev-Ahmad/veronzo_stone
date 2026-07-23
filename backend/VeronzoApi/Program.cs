@@ -216,6 +216,7 @@ app.MapAuthEndpoints();
 app.MapAdminCategoryEndpoints();
 app.MapAdminProductEndpoints();
 app.MapAdminPortfolioItemEndpoints();
+app.MapAdminGalleryItemEndpoints();
 app.MapAdminHeroStatEndpoints();
 app.MapAdminSiteContentEndpoints();
 app.MapAdminSocialLinkEndpoints();
