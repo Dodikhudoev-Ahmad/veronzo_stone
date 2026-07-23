@@ -1,4 +1,4 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '../api/client';
 import type { ListParams, PagedResult } from '../api/types';
 
@@ -23,6 +23,9 @@ export function createResourceHooks<TResponse, TRequest>(resourcePath: string, q
         const { data } = await apiClient.get<PagedResult<TResponse>>(basePath, { params });
         return data;
       },
+      // Keeps the previous page's rows on screen while the next page/search/sort
+      // is in flight, instead of flashing the loading skeleton on every change.
+      placeholderData: keepPreviousData,
     });
   }
 

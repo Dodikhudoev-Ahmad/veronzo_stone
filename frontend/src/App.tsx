@@ -1,5 +1,6 @@
 import { BrowserRouter } from 'react-router-dom';
 import { QueryClientProvider } from '@tanstack/react-query';
+import { Toaster } from 'react-hot-toast';
 import { queryClient } from './admin/api/queryClient';
 import { AuthProvider } from './admin/auth/AuthContext';
 import { AdminRouter } from './admin/router';
@@ -13,6 +14,7 @@ export default function App() {
       <AuthProvider>
         <BrowserRouter>
           <AdminRouter />
+          <Toaster position="top-right" toastOptions={{ duration: 4000 }} />
         </BrowserRouter>
       </AuthProvider>
     </QueryClientProvider>
