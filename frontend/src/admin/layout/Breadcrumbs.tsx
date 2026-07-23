@@ -5,6 +5,7 @@ const LABELS: Record<string, string> = {
   categories: 'Категории',
   products: 'Товары',
   portfolio: 'Портфолио',
+  gallery: 'Галерея',
   content: 'Контент',
   seo: 'SEO',
   settings: 'Настройки',

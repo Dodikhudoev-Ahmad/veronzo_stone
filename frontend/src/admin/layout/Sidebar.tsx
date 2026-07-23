@@ -5,6 +5,7 @@ const NAV_ITEMS = [
   { to: '/admin/categories', label: 'Категории' },
   { to: '/admin/products', label: 'Товары' },
   { to: '/admin/portfolio', label: 'Портфолио' },
+  { to: '/admin/gallery', label: 'Галерея' },
   { to: '/admin/content', label: 'Контент' },
   { to: '/admin/seo', label: 'SEO' },
   { to: '/admin/settings', label: 'Настройки' },

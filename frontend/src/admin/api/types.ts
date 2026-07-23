@@ -96,3 +96,12 @@ export interface SeoMetaResponse {
   ogImageUrl: string | null;
 }
 export type SeoMetaRequest = Omit<SeoMetaResponse, 'id'>;
+
+export interface GalleryItemResponse {
+  id: number;
+  title: string;
+  imageUrl: string | null;
+  sortOrder: number;
+  isVisible: boolean;
+}
+export type GalleryItemRequest = Omit<GalleryItemResponse, 'id'>;
