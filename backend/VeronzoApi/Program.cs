@@ -11,6 +11,7 @@ using Microsoft.IdentityModel.Tokens;
 using VeronzoApi.Data;
 using VeronzoApi.Endpoints;
 using VeronzoApi.Endpoints.Admin;
+using VeronzoApi.Endpoints.Public;
 using VeronzoApi.Models;
 using VeronzoApi.Services;
 using VeronzoApi.Validators;
@@ -222,6 +223,16 @@ app.MapAdminSiteContentEndpoints();
 app.MapAdminSocialLinkEndpoints();
 app.MapAdminContactInfoEndpoints();
 app.MapAdminSeoMetaEndpoints();
+
+app.MapPublicCategoryEndpoints();
+app.MapPublicProductEndpoints();
+app.MapPublicPortfolioItemEndpoints();
+app.MapPublicGalleryItemEndpoints();
+app.MapPublicHeroStatEndpoints();
+app.MapPublicSiteContentEndpoints();
+app.MapPublicSocialLinkEndpoints();
+app.MapPublicContactInfoEndpoints();
+app.MapPublicSeoMetaEndpoints();
 
 app.MapPost("/api/contact", async (
         ContactRequestDto dto,
