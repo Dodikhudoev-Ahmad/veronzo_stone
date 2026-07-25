@@ -88,8 +88,15 @@
       <div class="section-head-note">Три направления, единый стандарт качества — от подбора материала до монтажа на объекте.</div>
     </div>
 
-    <div class="cat3">
-      <article class="cat-card">
+    <div class="cat-filter" role="tablist" aria-label="Фильтр каталога по категориям">
+      <button type="button" class="cat-filter-btn is-active" role="tab" aria-selected="true" tabindex="0" data-category-slug="">Все</button>
+      <button type="button" class="cat-filter-btn" role="tab" aria-selected="false" tabindex="-1" data-category-slug="stone">Камень</button>
+      <button type="button" class="cat-filter-btn" role="tab" aria-selected="false" tabindex="-1" data-category-slug="doors">Двери</button>
+      <button type="button" class="cat-filter-btn" role="tab" aria-selected="false" tabindex="-1" data-category-slug="lifts">Лифты</button>
+    </div>
+
+    <div class="cat3" role="tabpanel">
+      <article class="cat-card" data-category-slug="stone">
         <picture>
           <source srcset="assets/images/catalog-stone.avif" type="image/avif">
           <img src="assets/images/catalog-stone.webp" alt="Камень" width="900" height="900" loading="lazy" decoding="async">
@@ -102,7 +109,7 @@
           <span class="cat-card-more">60+ ВИДОВ В НАЛИЧИИ →</span>
         </div>
       </article>
-      <article class="cat-card">
+      <article class="cat-card" data-category-slug="doors">
         <picture>
           <source srcset="assets/images/catalog-doors.avif" type="image/avif">
           <img src="assets/images/catalog-doors.webp" alt="Двери" width="900" height="599" loading="lazy" decoding="async">
@@ -115,7 +122,7 @@
           <span class="cat-card-more">СТОЛЯРНОЕ ПРОИЗВОДСТВО →</span>
         </div>
       </article>
-      <article class="cat-card">
+      <article class="cat-card" data-category-slug="lifts">
         <picture>
           <source srcset="assets/images/catalog-lifts.avif" type="image/avif">
           <img src="assets/images/catalog-lifts.webp" alt="Лифты" width="900" height="1350" loading="lazy" decoding="async">
@@ -129,6 +136,7 @@
         </div>
       </article>
     </div>
+    <p class="cat-empty" hidden>В этой категории пока нет товаров.</p>
   </div>
 </section>
 

@@ -488,10 +488,60 @@ body.menu-open {
   background: var(--color-bg-alt);
 }
 
+.cat-filter {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 32px;
+}
+
+.cat-filter-btn {
+  font-family: ui-monospace, Menlo, monospace;
+  font-size: 11.5px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--color-muted);
+  background: rgba(47, 70, 56, 0.06);
+  border: 1px solid rgba(20, 18, 9, 0.08);
+  border-radius: var(--radius-pill);
+  padding: 11px 20px;
+  cursor: pointer;
+  transition: background var(--transition-base), color var(--transition-base), border-color var(--transition-base);
+}
+
+.cat-filter-btn:focus-visible {
+  outline: 2px solid var(--color-accent-light);
+  outline-offset: 3px;
+}
+
+.cat-filter-btn.is-active {
+  color: var(--color-cream);
+  background: linear-gradient(135deg, #3a5545 0%, #22362a 100%);
+  border-color: transparent;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .cat-filter-btn:not(.is-active):hover {
+    background: rgba(47, 70, 56, 0.12);
+    color: var(--color-text);
+  }
+}
+
 .cat3 {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 22px;
+}
+
+.cat-empty {
+  font-size: 14px;
+  color: var(--color-muted);
+  padding: 40px 0;
+  text-align: center;
+}
+
+.cat-empty[hidden] {
+  display: none;
 }
 
 .cat-card {
@@ -500,8 +550,18 @@ body.menu-open {
   border-radius: var(--radius-sm);
   overflow: hidden;
   box-shadow: 0 26px 60px -30px rgba(27, 24, 19, 0.4);
-  transition: transform var(--transition-slow), box-shadow var(--transition-slow);
+  transition: transform var(--transition-slow), box-shadow var(--transition-slow), opacity .3s var(--ease-premium), scale .3s var(--ease-premium);
   display: block;
+}
+
+.cat-card.cat-card-hidden {
+  opacity: 0;
+  scale: .96;
+  pointer-events: none;
+}
+
+.cat-card-noimage {
+  background: var(--color-dark);
 }
 
 .cat-card img {
@@ -1315,6 +1375,16 @@ body.menu-open {
   .why2 {
     grid-template-columns: 1fr;
     gap: 44px;
+  }
+
+  .cat-filter {
+    gap: 8px;
+    margin-bottom: 24px;
+  }
+
+  .cat-filter-btn {
+    font-size: 11px;
+    padding: 9px 16px;
   }
 
   .cat3 {

@@ -246,36 +246,243 @@ function applyHeroStats(stats) {
   });
 }
 
+// ---- Catalog: category filter tabs + product grid ----
+//
+// Static fallback in index.html only lists the 3 known-visible categories
+// (stone/doors/lifts) — "windows" exists in the data model but is hidden
+// until the owner supplies real content, so it's deliberately not faked
+// here. knownCategorySlugs starts seeded with that same static set so an
+// unknown ?category= is rejected correctly even before the API responds;
+// applyCatalog() below replaces it with whatever /api/public/categories
+// actually returns once it resolves.
+var knownCategorySlugs = ['stone', 'doors', 'lifts'];
+var catalogActiveSlug = '';
+// The slug the URL asked for at page load, kept separately from
+// catalogActiveSlug: a category the API knows about but the static
+// fallback doesn't (e.g. one made visible after this HTML was authored)
+// would otherwise get silently normalized away to "Все" before the API
+// response arrives, with no way to recover it once real data confirms the
+// slug is actually valid. applyCatalog() re-checks this once real
+// categories arrive — but only if the user hasn't already picked a
+// category themselves in the meantime.
+var catalogRequestedSlug = '';
+var catalogUserInteracted = false;
+var CATALOG_FILTER_TRANSITION_MS = 300;
+
+function buildCatalogFilterButtonHtml(label, slug, isActive) {
+  return (
+    '<button type="button" class="cat-filter-btn' + (isActive ? ' is-active' : '') + '" role="tab" ' +
+      'aria-selected="' + (isActive ? 'true' : 'false') + '" tabindex="' + (isActive ? '0' : '-1') + '" ' +
+      'data-category-slug="' + escapeHtml(slug) + '">' + escapeHtml(label) + '</button>'
+  );
+}
+
+function buildCatalogCardHtml(product, category, index) {
+  var indexLabel = String(index + 1).padStart(2, '0');
+  var imageBase = product.imageUrl || '';
+  return (
+    '<article class="cat-card' + (imageBase ? '' : ' cat-card-noimage') + '" data-category-slug="' + escapeHtml(category.slug) + '">' +
+      (imageBase ?
+        '<picture>' +
+          '<source srcset="' + escapeHtml(imageBase + '.avif') + '" type="image/avif">' +
+          '<img src="' + escapeHtml(imageBase + '.webp') + '" alt="' + escapeHtml(product.title) + '" width="900" height="1200" loading="lazy" decoding="async">' +
+        '</picture>'
+        : '') +
+      '<div class="cat-card-scrim"></div>' +
+      '<div class="cat-card-index">' + indexLabel + '</div>' +
+      '<div class="cat-card-body">' +
+        '<h3>' + escapeHtml(product.title) + '</h3>' +
+        '<p>' + escapeHtml(product.description || '') + '</p>' +
+        (product.badgeText ? '<span class="cat-card-more">' + escapeHtml(product.badgeText) + '</span>' : '') +
+      '</div>' +
+    '</article>'
+  );
+}
+
+// Renumbers only the currently-visible cards, so the 01/02/03 index always
+// reads as a contiguous sequence within whatever category is active.
+function renumberVisibleCatalogCards(container) {
+  var i = 0;
+  container.querySelectorAll('.cat-card').forEach(function (card) {
+    if (card.hidden) return;
+    i += 1;
+    var indexEl = card.querySelector('.cat-card-index');
+    if (indexEl) indexEl.textContent = String(i).padStart(2, '0');
+  });
+}
+
+// instant=true skips the fade/scale transition — used for the very first
+// render (page load / a fresh API response) so nothing flashes visible
+// before being immediately hidden again.
+function filterCatalogCards(slug, instant) {
+  var container = document.querySelector('.cat3');
+  if (!container) return;
+  var visibleCount = 0;
+
+  container.querySelectorAll('.cat-card').forEach(function (card) {
+    var matches = !slug || card.getAttribute('data-category-slug') === slug;
+    if (matches) {
+      visibleCount += 1;
+      if (card.hidden) {
+        card.hidden = false;
+        if (!instant) {
+          card.classList.add('cat-card-hidden');
+          void card.offsetWidth; // force reflow so the transition-in actually runs
+        }
+        card.classList.remove('cat-card-hidden');
+      }
+    } else if (!card.hidden) {
+      if (instant) {
+        card.hidden = true;
+      } else {
+        card.classList.add('cat-card-hidden');
+        setTimeout(function () {
+          // Only finish hiding if it hasn't been re-shown by a later click
+          // in the meantime.
+          if (card.classList.contains('cat-card-hidden')) {
+            card.hidden = true;
+          }
+        }, CATALOG_FILTER_TRANSITION_MS);
+      }
+    }
+  });
+
+  renumberVisibleCatalogCards(container);
+  var emptyEl = document.querySelector('.cat-empty');
+  if (emptyEl) emptyEl.hidden = visibleCount > 0;
+}
+
+function getCategoryFromUrl() {
+  var params = new URLSearchParams(window.location.search);
+  return params.get('category') || '';
+}
+
+// Only ever touches the "category" param — every other query param on the
+// URL is preserved as-is.
+function updateUrlCategory(slug, replace) {
+  var url = new URL(window.location.href);
+  if (slug) {
+    url.searchParams.set('category', slug);
+  } else {
+    url.searchParams.delete('category');
+  }
+  window.history[replace ? 'replaceState' : 'pushState']({ category: slug }, '', url.toString());
+}
+
+function setActiveCatalogFilter(slug, options) {
+  options = options || {};
+  var normalizedSlug = (slug && knownCategorySlugs.indexOf(slug) !== -1) ? slug : '';
+  catalogActiveSlug = normalizedSlug;
+
+  document.querySelectorAll('.cat-filter-btn').forEach(function (btn) {
+    var isActive = (btn.getAttribute('data-category-slug') || '') === normalizedSlug;
+    btn.classList.toggle('is-active', isActive);
+    btn.setAttribute('aria-selected', isActive ? 'true' : 'false');
+    btn.tabIndex = isActive ? 0 : -1;
+  });
+
+  filterCatalogCards(normalizedSlug, !!options.instant);
+
+  if (options.updateUrl) {
+    updateUrlCategory(normalizedSlug, !!options.replaceUrl);
+  }
+}
+
+// Delegated listeners on the stable .cat-filter container (never replaced,
+// unlike the buttons inside it) — attaching here once means a later
+// applyCatalog() rebuild of the buttons never needs new listeners and can
+// never end up with duplicates.
+var catalogFilterInitialized = false;
+
+function setupCatalogFilters() {
+  if (catalogFilterInitialized) return;
+  catalogFilterInitialized = true;
+
+  var filterEl = document.querySelector('.cat-filter');
+  if (!filterEl) return;
+
+  filterEl.addEventListener('click', function (e) {
+    var btn = e.target.closest('.cat-filter-btn');
+    if (!btn || !filterEl.contains(btn)) return;
+    catalogUserInteracted = true;
+    setActiveCatalogFilter(btn.getAttribute('data-category-slug') || '', { updateUrl: true });
+  });
+
+  filterEl.addEventListener('keydown', function (e) {
+    if (e.key !== 'ArrowRight' && e.key !== 'ArrowLeft') return;
+    var buttons = Array.prototype.slice.call(filterEl.querySelectorAll('.cat-filter-btn'));
+    var currentIndex = buttons.indexOf(document.activeElement);
+    if (currentIndex === -1) return;
+    e.preventDefault();
+    var nextIndex = e.key === 'ArrowRight'
+      ? (currentIndex + 1) % buttons.length
+      : (currentIndex - 1 + buttons.length) % buttons.length;
+    var nextBtn = buttons[nextIndex];
+    nextBtn.focus();
+    catalogUserInteracted = true;
+    setActiveCatalogFilter(nextBtn.getAttribute('data-category-slug') || '', { updateUrl: true });
+  });
+
+  window.addEventListener('popstate', function () {
+    catalogUserInteracted = true;
+    setActiveCatalogFilter(getCategoryFromUrl(), {});
+  });
+
+  // Apply whatever the URL says right away, against whatever's currently
+  // rendered (the static fallback until/unless the API replaces it).
+  // Remembered separately (catalogRequestedSlug) so a slug the static
+  // fallback doesn't know about yet can still be honored once applyCatalog()
+  // confirms it against the real category list.
+  catalogRequestedSlug = getCategoryFromUrl();
+  setActiveCatalogFilter(catalogRequestedSlug, { instant: true });
+}
+
 function applyCatalog(categories, products) {
   if (!categories || !categories.length || !products) return;
+  var filterEl = document.querySelector('.cat-filter');
   var container = document.querySelector('.cat3');
   if (!container) return;
 
-  var productByCategory = {};
-  products.forEach(function (p) {
-    if (!(p.categoryId in productByCategory)) productByCategory[p.categoryId] = p;
+  knownCategorySlugs = categories.map(function (c) { return c.slug; });
+
+  // The URL's requested category might not have been in the static
+  // fallback's hardcoded slug list (e.g. a category made visible after this
+  // HTML was authored) and so was provisionally normalized to "Все" before
+  // this real data arrived. Honor it now — but only if the user hasn't
+  // since picked a category themselves, which must always win.
+  if (!catalogUserInteracted && catalogRequestedSlug && knownCategorySlugs.indexOf(catalogRequestedSlug) !== -1) {
+    catalogActiveSlug = catalogRequestedSlug;
+  }
+
+  // The active filter may reference a category that no longer exists (e.g.
+  // it was hidden) — fall back to "Все" rather than leaving the grid empty.
+  if (catalogActiveSlug && knownCategorySlugs.indexOf(catalogActiveSlug) === -1) {
+    catalogActiveSlug = '';
+  }
+
+  if (filterEl) {
+    filterEl.innerHTML = buildCatalogFilterButtonHtml('Все', '', catalogActiveSlug === '') +
+      categories.map(function (category) {
+        return buildCatalogFilterButtonHtml(category.name, category.slug, catalogActiveSlug === category.slug);
+      }).join('');
+  }
+
+  var categoryById = {};
+  categories.forEach(function (category) { categoryById[category.id] = category; });
+
+  var sortedProducts = products.slice().sort(function (a, b) {
+    var categoryA = categoryById[a.categoryId];
+    var categoryB = categoryById[b.categoryId];
+    var categoryOrderA = categoryA ? categoryA.sortOrder : 0;
+    var categoryOrderB = categoryB ? categoryB.sortOrder : 0;
+    if (categoryOrderA !== categoryOrderB) return categoryOrderA - categoryOrderB;
+    return a.sortOrder - b.sortOrder;
   });
 
-  var cardsHtml = categories.map(function (category, index) {
-    var product = productByCategory[category.id];
-    if (!product) return '';
-    var indexLabel = String(index + 1).padStart(2, '0');
-    var imageBase = product.imageUrl || '';
-    return (
-      '<article class="cat-card">' +
-        '<picture>' +
-          (imageBase ? '<source srcset="' + escapeHtml(imageBase + '.avif') + '" type="image/avif">' : '') +
-          '<img src="' + (imageBase ? escapeHtml(imageBase + '.webp') : '') + '" alt="' + escapeHtml(category.name) + '" width="900" height="1200" loading="lazy" decoding="async">' +
-        '</picture>' +
-        '<div class="cat-card-scrim"></div>' +
-        '<div class="cat-card-index">' + indexLabel + '</div>' +
-        '<div class="cat-card-body">' +
-          '<h3>' + escapeHtml(category.name) + '</h3>' +
-          '<p>' + escapeHtml(product.description || '') + '</p>' +
-          (product.badgeText ? '<span class="cat-card-more">' + escapeHtml(product.badgeText) + '</span>' : '') +
-        '</div>' +
-      '</article>'
-    );
+  var cardsHtml = sortedProducts.map(function (product, index) {
+    var category = categoryById[product.categoryId];
+    if (!category) return '';
+    return buildCatalogCardHtml(product, category, index);
   }).join('');
 
   if (!cardsHtml) return;
@@ -284,6 +491,9 @@ function applyCatalog(categories, products) {
   // just discarded with the innerHTML replacement; register the new ones
   // with the already-running observer instead of creating a new one.
   observeRevealElements(container);
+  // Re-apply whatever category is currently active so the freshly-rebuilt
+  // grid/tabs stay consistent with what the user (or the URL) had selected.
+  filterCatalogCards(catalogActiveSlug, true);
 }
 
 function applyPortfolio(items) {
@@ -545,6 +755,7 @@ function setupMicroAnimations() {
 // net for anything else, since observeRevealElements() skips everything
 // already registered.
 setupMicroAnimations();
+setupCatalogFilters();
 
 loadSiteData()
   .catch(function (err) {
