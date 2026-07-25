@@ -175,6 +175,7 @@ using (var scope = app.Services.CreateScope())
     var passwordHasher = scope.ServiceProvider.GetRequiredService<IPasswordHasher<AdminUser>>();
     var seedLogger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
     await DbSeeder.SeedAdminUserAsync(db, passwordHasher, builder.Configuration, seedLogger);
+    await DbSeeder.ResetAdminPasswordIfRequestedAsync(db, passwordHasher, builder.Configuration, app.Environment, seedLogger);
 }
 
 if (app.Environment.IsDevelopment())
