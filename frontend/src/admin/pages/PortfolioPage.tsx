@@ -10,6 +10,8 @@ import { ErrorState } from '../components/ui/ErrorState';
 import { ConfirmDialog } from '../components/ui/ConfirmDialog';
 import { ImagePreview } from '../components/ui/ImagePreview';
 import { PortfolioFormDialog } from '../features/portfolio/PortfolioFormDialog';
+import { TranslationEditorModal } from '../features/translations/TranslationEditorModal';
+import { TRANSLATION_FIELD_CONFIGS } from '../features/translations/translationFieldConfig';
 import type { PortfolioFormValues } from '../features/portfolio/portfolioSchema';
 import {
   useCreatePortfolioItem,
@@ -50,6 +52,7 @@ export default function PortfolioPage() {
   const [sort, setSort] = useState<string>('sortOrder');
   const [dialogState, setDialogState] = useState<DialogState>(null);
   const [deleteTarget, setDeleteTarget] = useState<PortfolioItemResponse | null>(null);
+  const [translationsTarget, setTranslationsTarget] = useState<PortfolioItemResponse | null>(null);
 
   // A new search/featured filter/sort invalidates the current page position.
   // Reset during render (React's documented "adjusting state when a dependency
@@ -150,6 +153,14 @@ export default function PortfolioPage() {
         <div className="flex justify-end gap-3">
           <button
             type="button"
+            aria-label={`Переводы «${p.title}»`}
+            className="text-accent hover:underline"
+            onClick={() => setTranslationsTarget(p)}
+          >
+            Переводы
+          </button>
+          <button
+            type="button"
             aria-label={`Изменить «${p.title}»`}
             className="text-accent hover:underline"
             onClick={() => setDialogState({ mode: 'edit', item: p })}
@@ -246,6 +257,15 @@ export default function PortfolioPage() {
         busy={deleteMutation.isPending}
         onConfirm={handleDeleteConfirm}
         onCancel={() => setDeleteTarget(null)}
+      />
+
+      <TranslationEditorModal
+        open={translationsTarget !== null}
+        onClose={() => setTranslationsTarget(null)}
+        entity="portfolio-items"
+        id={translationsTarget?.id ?? null}
+        entityTitle={translationsTarget ? `«${translationsTarget.title}»` : ''}
+        fields={TRANSLATION_FIELD_CONFIGS['portfolio-items']}
       />
     </div>
   );

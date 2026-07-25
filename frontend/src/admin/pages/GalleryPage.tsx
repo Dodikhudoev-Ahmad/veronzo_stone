@@ -10,6 +10,8 @@ import { ErrorState } from '../components/ui/ErrorState';
 import { ConfirmDialog } from '../components/ui/ConfirmDialog';
 import { ImagePreview } from '../components/ui/ImagePreview';
 import { GalleryFormDialog } from '../features/gallery/GalleryFormDialog';
+import { TranslationEditorModal } from '../features/translations/TranslationEditorModal';
+import { TRANSLATION_FIELD_CONFIGS } from '../features/translations/translationFieldConfig';
 import type { GalleryFormValues } from '../features/gallery/gallerySchema';
 import { useCreateGalleryItem, useDeleteGalleryItem, useGalleryItems, useUpdateGalleryItem } from '../hooks/useGalleryItems';
 import { useDebouncedValue } from '../hooks/useDebouncedValue';
@@ -37,6 +39,7 @@ export default function GalleryPage() {
   const [sort, setSort] = useState<string>('sortOrder');
   const [dialogState, setDialogState] = useState<DialogState>(null);
   const [deleteTarget, setDeleteTarget] = useState<GalleryItemResponse | null>(null);
+  const [translationsTarget, setTranslationsTarget] = useState<GalleryItemResponse | null>(null);
 
   // A new search/sort invalidates the current page position. Reset during
   // render (React's documented "adjusting state when a dependency changes"
@@ -130,6 +133,14 @@ export default function GalleryPage() {
         <div className="flex justify-end gap-3">
           <button
             type="button"
+            aria-label={`Переводы «${g.title}»`}
+            className="text-accent hover:underline"
+            onClick={() => setTranslationsTarget(g)}
+          >
+            Переводы
+          </button>
+          <button
+            type="button"
             aria-label={`Изменить «${g.title}»`}
             className="text-accent hover:underline"
             onClick={() => setDialogState({ mode: 'edit', item: g })}
@@ -203,6 +214,15 @@ export default function GalleryPage() {
         busy={deleteMutation.isPending}
         onConfirm={handleDeleteConfirm}
         onCancel={() => setDeleteTarget(null)}
+      />
+
+      <TranslationEditorModal
+        open={translationsTarget !== null}
+        onClose={() => setTranslationsTarget(null)}
+        entity="gallery-items"
+        id={translationsTarget?.id ?? null}
+        entityTitle={translationsTarget ? `«${translationsTarget.title}»` : ''}
+        fields={TRANSLATION_FIELD_CONFIGS['gallery-items']}
       />
     </div>
   );

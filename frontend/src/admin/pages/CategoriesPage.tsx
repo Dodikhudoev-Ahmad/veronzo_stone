@@ -10,6 +10,8 @@ import { ErrorState } from '../components/ui/ErrorState';
 import { ConfirmDialog } from '../components/ui/ConfirmDialog';
 import { CategoryFormDialog } from '../features/categories/CategoryFormDialog';
 import type { CategoryFormValues } from '../features/categories/categorySchema';
+import { TranslationEditorModal } from '../features/translations/TranslationEditorModal';
+import { TRANSLATION_FIELD_CONFIGS } from '../features/translations/translationFieldConfig';
 import { useCategories, useCreateCategory, useDeleteCategory, useUpdateCategory } from '../hooks/useCategories';
 import { useDebouncedValue } from '../hooks/useDebouncedValue';
 import { getApiErrorMessage } from '../lib/apiError';
@@ -26,6 +28,7 @@ export default function CategoriesPage() {
   const [sort, setSort] = useState<string>('sortOrder');
   const [dialogState, setDialogState] = useState<DialogState>(null);
   const [deleteTarget, setDeleteTarget] = useState<CategoryResponse | null>(null);
+  const [translationsTarget, setTranslationsTarget] = useState<CategoryResponse | null>(null);
 
   // A new search/sort invalidates the current page position. Reset it during
   // render (React's documented "adjusting state when a dependency changes"
@@ -95,6 +98,14 @@ export default function CategoriesPage() {
       align: 'right',
       render: (c) => (
         <div className="flex justify-end gap-3">
+          <button
+            type="button"
+            aria-label={`Переводы «${c.name}»`}
+            className="text-accent hover:underline"
+            onClick={() => setTranslationsTarget(c)}
+          >
+            Переводы
+          </button>
           <button
             type="button"
             className="text-accent hover:underline"
@@ -173,6 +184,15 @@ export default function CategoriesPage() {
         busy={deleteMutation.isPending}
         onConfirm={handleDeleteConfirm}
         onCancel={() => setDeleteTarget(null)}
+      />
+
+      <TranslationEditorModal
+        open={translationsTarget !== null}
+        onClose={() => setTranslationsTarget(null)}
+        entity="categories"
+        id={translationsTarget?.id ?? null}
+        entityTitle={translationsTarget ? `«${translationsTarget.name}»` : ''}
+        fields={TRANSLATION_FIELD_CONFIGS.categories}
       />
     </div>
   );

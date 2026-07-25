@@ -5,12 +5,18 @@ interface ModalProps {
   onClose: () => void;
   title: string;
   children: ReactNode;
+  // Mirrors the native <dialog> "cancel" event (fired on Escape, before
+  // "close"). Optional and additive — existing callers that don't pass it see
+  // no behavior change. A caller can call event.preventDefault() here to stop
+  // Escape from closing the dialog outright (e.g. to run an unsaved-changes
+  // confirmation first instead).
+  onCancel?: (event: React.SyntheticEvent<HTMLDialogElement>) => void;
 }
 
 // Built on the native <dialog> element instead of a component library — free
 // focus trap, Escape-to-close, and a real modal stacking context, with zero
 // new dependencies.
-export function Modal({ open, onClose, title, children }: ModalProps) {
+export function Modal({ open, onClose, title, children, onCancel }: ModalProps) {
   const dialogRef = useRef<HTMLDialogElement>(null);
 
   useEffect(() => {
@@ -28,6 +34,7 @@ export function Modal({ open, onClose, title, children }: ModalProps) {
     <dialog
       ref={dialogRef}
       onClose={onClose}
+      onCancel={onCancel}
       onClick={(event) => {
         // Native <dialog> has no built-in backdrop-click-to-close — a click
         // that lands on the <dialog> element itself (not its content) means

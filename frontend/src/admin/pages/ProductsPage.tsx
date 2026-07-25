@@ -12,6 +12,8 @@ import { ImagePreview } from '../components/ui/ImagePreview';
 import { ProductFormDialog } from '../features/products/ProductFormDialog';
 import type { ProductFormValues } from '../features/products/productSchema';
 import { useCategoryOptions } from '../features/products/useCategoryOptions';
+import { TranslationEditorModal } from '../features/translations/TranslationEditorModal';
+import { TRANSLATION_FIELD_CONFIGS } from '../features/translations/translationFieldConfig';
 import { useCreateProduct, useDeleteProduct, useProducts, useUpdateProduct } from '../hooks/useProducts';
 import { useDebouncedValue } from '../hooks/useDebouncedValue';
 import { getApiErrorMessage } from '../lib/apiError';
@@ -46,6 +48,7 @@ export default function ProductsPage() {
   const [sort, setSort] = useState<string>('sortOrder');
   const [dialogState, setDialogState] = useState<DialogState>(null);
   const [deleteTarget, setDeleteTarget] = useState<ProductResponse | null>(null);
+  const [translationsTarget, setTranslationsTarget] = useState<ProductResponse | null>(null);
 
   // A new search/category filter/sort invalidates the current page position.
   // Reset during render (React's documented "adjusting state when a dependency
@@ -144,6 +147,14 @@ export default function ProductsPage() {
       align: 'right',
       render: (p) => (
         <div className="flex justify-end gap-3">
+          <button
+            type="button"
+            aria-label={`Переводы «${p.title}»`}
+            className="text-accent hover:underline"
+            onClick={() => setTranslationsTarget(p)}
+          >
+            Переводы
+          </button>
           <button
             type="button"
             aria-label={`Изменить «${p.title}»`}
@@ -261,6 +272,15 @@ export default function ProductsPage() {
         busy={deleteMutation.isPending}
         onConfirm={handleDeleteConfirm}
         onCancel={() => setDeleteTarget(null)}
+      />
+
+      <TranslationEditorModal
+        open={translationsTarget !== null}
+        onClose={() => setTranslationsTarget(null)}
+        entity="products"
+        id={translationsTarget?.id ?? null}
+        entityTitle={translationsTarget ? `«${translationsTarget.title}»` : ''}
+        fields={TRANSLATION_FIELD_CONFIGS.products}
       />
     </div>
   );
