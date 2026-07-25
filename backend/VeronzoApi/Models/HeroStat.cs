@@ -8,4 +8,5 @@ public class HeroStat
     public string Label { get; set; } = string.Empty;
     public int SortOrder { get; set; }
     public bool IsVisible { get; set; } = true;
+    public ICollection<HeroStatTranslation> Translations { get; set; } = new List<HeroStatTranslation>();
 }

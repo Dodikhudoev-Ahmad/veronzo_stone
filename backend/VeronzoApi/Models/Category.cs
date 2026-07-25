@@ -7,4 +7,5 @@ public class Category
     public string Name { get; set; } = string.Empty;
     public int SortOrder { get; set; }
     public bool IsVisible { get; set; } = true;
+    public ICollection<CategoryTranslation> Translations { get; set; } = new List<CategoryTranslation>();
 }

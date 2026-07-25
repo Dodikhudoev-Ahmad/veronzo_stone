@@ -10,4 +10,5 @@ public class PortfolioItem
     public int SortOrder { get; set; }
     public bool IsVisible { get; set; } = true;
     public bool IsFeatured { get; set; }
+    public ICollection<PortfolioItemTranslation> Translations { get; set; } = new List<PortfolioItemTranslation>();
 }

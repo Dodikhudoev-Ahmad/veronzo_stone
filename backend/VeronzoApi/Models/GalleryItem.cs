@@ -7,4 +7,5 @@ public class GalleryItem
     public string? ImageUrl { get; set; }
     public int SortOrder { get; set; }
     public bool IsVisible { get; set; } = true;
+    public ICollection<GalleryItemTranslation> Translations { get; set; } = new List<GalleryItemTranslation>();
 }

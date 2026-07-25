@@ -112,6 +112,7 @@ public static class AdminProductEndpoints
             IsVisible = request.IsVisible
         };
         db.Products.Add(product);
+        await AdminTranslationSync.SyncProductAsync(db, product, isNew: true, cancellationToken);
 
         var conflict = await AdminEndpointHelpers.TrySaveChangesAsync(db, cancellationToken);
         if (conflict is not null)
@@ -151,6 +152,7 @@ public static class AdminProductEndpoints
         product.ImageUrl = request.ImageUrl;
         product.SortOrder = request.SortOrder;
         product.IsVisible = request.IsVisible;
+        await AdminTranslationSync.SyncProductAsync(db, product, isNew: false, cancellationToken);
 
         var conflict = await AdminEndpointHelpers.TrySaveChangesAsync(db, cancellationToken);
         if (conflict is not null)

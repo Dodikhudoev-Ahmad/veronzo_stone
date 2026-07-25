@@ -95,6 +95,7 @@ public static class AdminSeoMetaEndpoints
             OgImageUrl = request.OgImageUrl
         };
         db.SeoMetas.Add(item);
+        await AdminTranslationSync.SyncSeoMetaAsync(db, item, isNew: true, cancellationToken);
 
         var conflict = await AdminEndpointHelpers.TrySaveChangesAsync(db, cancellationToken);
         if (conflict is not null)
@@ -131,6 +132,7 @@ public static class AdminSeoMetaEndpoints
         item.Title = request.Title;
         item.Description = request.Description;
         item.OgImageUrl = request.OgImageUrl;
+        await AdminTranslationSync.SyncSeoMetaAsync(db, item, isNew: false, cancellationToken);
 
         var conflict = await AdminEndpointHelpers.TrySaveChangesAsync(db, cancellationToken);
         if (conflict is not null)

@@ -93,6 +93,7 @@ public static class AdminGalleryItemEndpoints
             IsVisible = request.IsVisible
         };
         db.GalleryItems.Add(item);
+        await AdminTranslationSync.SyncGalleryItemAsync(db, item, isNew: true, cancellationToken);
 
         var conflict = await AdminEndpointHelpers.TrySaveChangesAsync(db, cancellationToken);
         if (conflict is not null)
@@ -124,6 +125,7 @@ public static class AdminGalleryItemEndpoints
         item.ImageUrl = request.ImageUrl;
         item.SortOrder = request.SortOrder;
         item.IsVisible = request.IsVisible;
+        await AdminTranslationSync.SyncGalleryItemAsync(db, item, isNew: false, cancellationToken);
 
         var conflict = await AdminEndpointHelpers.TrySaveChangesAsync(db, cancellationToken);
         if (conflict is not null)

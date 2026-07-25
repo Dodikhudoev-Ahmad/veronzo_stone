@@ -103,6 +103,7 @@ public static class AdminPortfolioItemEndpoints
             IsFeatured = request.IsFeatured
         };
         db.PortfolioItems.Add(item);
+        await AdminTranslationSync.SyncPortfolioItemAsync(db, item, isNew: true, cancellationToken);
 
         var conflict = await AdminEndpointHelpers.TrySaveChangesAsync(db, cancellationToken);
         if (conflict is not null)
@@ -137,6 +138,7 @@ public static class AdminPortfolioItemEndpoints
         item.SortOrder = request.SortOrder;
         item.IsVisible = request.IsVisible;
         item.IsFeatured = request.IsFeatured;
+        await AdminTranslationSync.SyncPortfolioItemAsync(db, item, isNew: false, cancellationToken);
 
         var conflict = await AdminEndpointHelpers.TrySaveChangesAsync(db, cancellationToken);
         if (conflict is not null)

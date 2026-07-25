@@ -12,4 +12,5 @@ public class Product
     public string? ImageUrl { get; set; }
     public int SortOrder { get; set; }
     public bool IsVisible { get; set; } = true;
+    public ICollection<ProductTranslation> Translations { get; set; } = new List<ProductTranslation>();
 }

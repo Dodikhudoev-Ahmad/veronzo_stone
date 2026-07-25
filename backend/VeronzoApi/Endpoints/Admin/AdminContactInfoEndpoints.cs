@@ -81,6 +81,7 @@ public static class AdminContactInfoEndpoints
 
         var item = new ContactInfo { Label = request.Label, Value = request.Value, SortOrder = request.SortOrder };
         db.ContactInfos.Add(item);
+        await AdminTranslationSync.SyncContactInfoAsync(db, item, isNew: true, cancellationToken);
 
         var conflict = await AdminEndpointHelpers.TrySaveChangesAsync(db, cancellationToken);
         if (conflict is not null)
@@ -111,6 +112,7 @@ public static class AdminContactInfoEndpoints
         item.Label = request.Label;
         item.Value = request.Value;
         item.SortOrder = request.SortOrder;
+        await AdminTranslationSync.SyncContactInfoAsync(db, item, isNew: false, cancellationToken);
 
         var conflict = await AdminEndpointHelpers.TrySaveChangesAsync(db, cancellationToken);
         if (conflict is not null)

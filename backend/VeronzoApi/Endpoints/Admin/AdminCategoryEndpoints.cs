@@ -106,6 +106,7 @@ public static class AdminCategoryEndpoints
             IsVisible = request.IsVisible
         };
         db.Categories.Add(category);
+        AdminTranslationSync.SyncCategory(category, isNew: true);
 
         var conflict = await AdminEndpointHelpers.TrySaveChangesAsync(db, cancellationToken);
         if (conflict is not null)
@@ -142,6 +143,7 @@ public static class AdminCategoryEndpoints
         category.Name = request.Name;
         category.SortOrder = request.SortOrder;
         category.IsVisible = request.IsVisible;
+        await AdminTranslationSync.SyncCategoryAsync(db, category, isNew: false, cancellationToken);
 
         var conflict = await AdminEndpointHelpers.TrySaveChangesAsync(db, cancellationToken);
         if (conflict is not null)

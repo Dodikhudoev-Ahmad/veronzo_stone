@@ -129,6 +129,209 @@ public static class DbSeeder
             "assets/images/hero-calacatta.webp");
     }
 
+    // Existing content is authored in Russian, so every row that doesn't yet have a
+    // "ru" translation gets one created from its current field values. Never touches
+    // a "ru" translation that already exists (an admin may have edited it since), and
+    // never invents tg/en/zh content. Safe to call on every startup: each backfill
+    // does a single existence query per entity type, then inserts only what's
+    // missing — no network calls, no data loss, idempotent on repeated runs.
+    public static async Task SeedRussianTranslationsAsync(AppDbContext db)
+    {
+        await BackfillCategoryTranslationsAsync(db);
+        await BackfillProductTranslationsAsync(db);
+        await BackfillPortfolioItemTranslationsAsync(db);
+        await BackfillGalleryItemTranslationsAsync(db);
+        await BackfillSiteContentTranslationsAsync(db);
+        await BackfillHeroStatTranslationsAsync(db);
+        await BackfillSeoMetaTranslationsAsync(db);
+        await BackfillContactInfoTranslationsAsync(db);
+    }
+
+    private static async Task BackfillCategoryTranslationsAsync(AppDbContext db)
+    {
+        var translatedIds = await db.CategoryTranslations
+            .Where(t => t.LanguageCode == SupportedLanguages.Default)
+            .Select(t => t.CategoryId)
+            .ToListAsync();
+
+        var missing = await db.Categories.Where(c => !translatedIds.Contains(c.Id)).ToListAsync();
+        if (missing.Count == 0) return;
+
+        foreach (var category in missing)
+        {
+            db.CategoryTranslations.Add(new CategoryTranslation
+            {
+                CategoryId = category.Id,
+                LanguageCode = SupportedLanguages.Default,
+                Name = category.Name
+            });
+        }
+        await db.SaveChangesAsync();
+    }
+
+    private static async Task BackfillProductTranslationsAsync(AppDbContext db)
+    {
+        var translatedIds = await db.ProductTranslations
+            .Where(t => t.LanguageCode == SupportedLanguages.Default)
+            .Select(t => t.ProductId)
+            .ToListAsync();
+
+        var missing = await db.Products.Where(p => !translatedIds.Contains(p.Id)).ToListAsync();
+        if (missing.Count == 0) return;
+
+        foreach (var product in missing)
+        {
+            db.ProductTranslations.Add(new ProductTranslation
+            {
+                ProductId = product.Id,
+                LanguageCode = SupportedLanguages.Default,
+                Title = product.Title,
+                Description = product.Description,
+                BadgeText = product.BadgeText
+            });
+        }
+        await db.SaveChangesAsync();
+    }
+
+    private static async Task BackfillPortfolioItemTranslationsAsync(AppDbContext db)
+    {
+        var translatedIds = await db.PortfolioItemTranslations
+            .Where(t => t.LanguageCode == SupportedLanguages.Default)
+            .Select(t => t.PortfolioItemId)
+            .ToListAsync();
+
+        var missing = await db.PortfolioItems.Where(p => !translatedIds.Contains(p.Id)).ToListAsync();
+        if (missing.Count == 0) return;
+
+        foreach (var item in missing)
+        {
+            db.PortfolioItemTranslations.Add(new PortfolioItemTranslation
+            {
+                PortfolioItemId = item.Id,
+                LanguageCode = SupportedLanguages.Default,
+                Title = item.Title,
+                Meta = item.Meta,
+                CategoryTag = item.CategoryTag
+            });
+        }
+        await db.SaveChangesAsync();
+    }
+
+    private static async Task BackfillGalleryItemTranslationsAsync(AppDbContext db)
+    {
+        var translatedIds = await db.GalleryItemTranslations
+            .Where(t => t.LanguageCode == SupportedLanguages.Default)
+            .Select(t => t.GalleryItemId)
+            .ToListAsync();
+
+        var missing = await db.GalleryItems.Where(g => !translatedIds.Contains(g.Id)).ToListAsync();
+        if (missing.Count == 0) return;
+
+        foreach (var item in missing)
+        {
+            // AltText has no legacy source field on GalleryItem — left null rather
+            // than invented.
+            db.GalleryItemTranslations.Add(new GalleryItemTranslation
+            {
+                GalleryItemId = item.Id,
+                LanguageCode = SupportedLanguages.Default,
+                Title = item.Title
+            });
+        }
+        await db.SaveChangesAsync();
+    }
+
+    private static async Task BackfillSiteContentTranslationsAsync(AppDbContext db)
+    {
+        var translatedIds = await db.SiteContentTranslations
+            .Where(t => t.LanguageCode == SupportedLanguages.Default)
+            .Select(t => t.SiteContentId)
+            .ToListAsync();
+
+        var missing = await db.SiteContents.Where(c => !translatedIds.Contains(c.Id)).ToListAsync();
+        if (missing.Count == 0) return;
+
+        foreach (var content in missing)
+        {
+            db.SiteContentTranslations.Add(new SiteContentTranslation
+            {
+                SiteContentId = content.Id,
+                LanguageCode = SupportedLanguages.Default,
+                Value = content.Value
+            });
+        }
+        await db.SaveChangesAsync();
+    }
+
+    private static async Task BackfillHeroStatTranslationsAsync(AppDbContext db)
+    {
+        var translatedIds = await db.HeroStatTranslations
+            .Where(t => t.LanguageCode == SupportedLanguages.Default)
+            .Select(t => t.HeroStatId)
+            .ToListAsync();
+
+        var missing = await db.HeroStats.Where(h => !translatedIds.Contains(h.Id)).ToListAsync();
+        if (missing.Count == 0) return;
+
+        foreach (var stat in missing)
+        {
+            db.HeroStatTranslations.Add(new HeroStatTranslation
+            {
+                HeroStatId = stat.Id,
+                LanguageCode = SupportedLanguages.Default,
+                Label = stat.Label
+            });
+        }
+        await db.SaveChangesAsync();
+    }
+
+    private static async Task BackfillSeoMetaTranslationsAsync(AppDbContext db)
+    {
+        var translatedIds = await db.SeoMetaTranslations
+            .Where(t => t.LanguageCode == SupportedLanguages.Default)
+            .Select(t => t.SeoMetaId)
+            .ToListAsync();
+
+        var missing = await db.SeoMetas.Where(s => !translatedIds.Contains(s.Id)).ToListAsync();
+        if (missing.Count == 0) return;
+
+        foreach (var seo in missing)
+        {
+            // Keywords/OgTitle/OgDescription have no legacy source field — left null
+            // rather than invented.
+            db.SeoMetaTranslations.Add(new SeoMetaTranslation
+            {
+                SeoMetaId = seo.Id,
+                LanguageCode = SupportedLanguages.Default,
+                Title = seo.Title,
+                Description = seo.Description
+            });
+        }
+        await db.SaveChangesAsync();
+    }
+
+    private static async Task BackfillContactInfoTranslationsAsync(AppDbContext db)
+    {
+        var translatedIds = await db.ContactInfoTranslations
+            .Where(t => t.LanguageCode == SupportedLanguages.Default)
+            .Select(t => t.ContactInfoId)
+            .ToListAsync();
+
+        var missing = await db.ContactInfos.Where(c => !translatedIds.Contains(c.Id)).ToListAsync();
+        if (missing.Count == 0) return;
+
+        foreach (var contact in missing)
+        {
+            db.ContactInfoTranslations.Add(new ContactInfoTranslation
+            {
+                ContactInfoId = contact.Id,
+                LanguageCode = SupportedLanguages.Default,
+                Label = contact.Label
+            });
+        }
+        await db.SaveChangesAsync();
+    }
+
     private static async Task<Category> SeedCategoryAsync(AppDbContext db, string slug, string name, int sortOrder, bool isVisible)
     {
         var existing = await db.Categories.FirstOrDefaultAsync(c => c.Slug == slug);

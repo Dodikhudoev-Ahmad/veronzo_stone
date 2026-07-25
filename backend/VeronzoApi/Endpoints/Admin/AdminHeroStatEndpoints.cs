@@ -95,6 +95,7 @@ public static class AdminHeroStatEndpoints
             IsVisible = request.IsVisible
         };
         db.HeroStats.Add(stat);
+        await AdminTranslationSync.SyncHeroStatAsync(db, stat, isNew: true, cancellationToken);
 
         var conflict = await AdminEndpointHelpers.TrySaveChangesAsync(db, cancellationToken);
         if (conflict is not null)
@@ -127,6 +128,7 @@ public static class AdminHeroStatEndpoints
         stat.Suffix = request.Suffix;
         stat.SortOrder = request.SortOrder;
         stat.IsVisible = request.IsVisible;
+        await AdminTranslationSync.SyncHeroStatAsync(db, stat, isNew: false, cancellationToken);
 
         var conflict = await AdminEndpointHelpers.TrySaveChangesAsync(db, cancellationToken);
         if (conflict is not null)

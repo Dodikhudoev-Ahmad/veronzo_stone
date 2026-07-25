@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using VeronzoApi.Data;
+using VeronzoApi.Models;
 using VeronzoApi.Models.Public;
 
 namespace VeronzoApi.Endpoints.Public;
@@ -12,12 +13,16 @@ public static class PublicProductEndpoints
             .WithSummary("List visible products")
             .WithDescription(
                 "Public, unauthenticated. Only IsVisible=true products whose category is also " +
-                "IsVisible=true, ordered by SortOrder then Id. Optional ?categorySlug= filter.")
+                "IsVisible=true, ordered by SortOrder then Id. Optional ?categorySlug= filter and " +
+                "optional ?lang= (ru/tg/en/zh, default ru) with ru-then-legacy-field fallback.")
             .Produces<PublicProductResponse[]>(StatusCodes.Status200OK);
     }
 
-    private static async Task<IResult> ListAsync(string? categorySlug, AppDbContext db, CancellationToken cancellationToken)
+    private static async Task<IResult> ListAsync(
+        string? categorySlug, string? lang, AppDbContext db, CancellationToken cancellationToken)
     {
+        var language = SupportedLanguages.Normalize(lang);
+
         // A product in a hidden category (e.g. "windows" before the owner supplies
         // real copy/photos) must stay hidden too, even though Product.IsVisible
         // itself might be true — the join enforces that without needing a second
@@ -33,12 +38,28 @@ public static class PublicProductEndpoints
             query = query.Where(x => x.Category.Slug == categorySlug);
         }
 
-        var items = await query
+        var raw = await query
             .OrderBy(x => x.Product.SortOrder).ThenBy(x => x.Product.Id)
-            .Select(x => new PublicProductResponse(
-                x.Product.Id, x.Product.CategoryId, x.Product.Title, x.Product.Description,
-                x.Product.BadgeText, x.Product.ImageUrl, x.Product.SortOrder))
+            .Select(x => new
+            {
+                x.Product.Id,
+                x.Product.CategoryId,
+                x.Product.Title,
+                x.Product.Description,
+                x.Product.BadgeText,
+                x.Product.ImageUrl,
+                x.Product.SortOrder,
+                Requested = x.Product.Translations.FirstOrDefault(t => t.LanguageCode == language),
+                Ru = x.Product.Translations.FirstOrDefault(t => t.LanguageCode == SupportedLanguages.Default)
+            })
             .ToListAsync(cancellationToken);
+
+        var items = raw.Select(x => new PublicProductResponse(
+            x.Id, x.CategoryId,
+            PublicTranslationHelpers.Pick(x.Requested?.Title, x.Ru?.Title, x.Title),
+            PublicTranslationHelpers.PickNullable(x.Requested?.Description, x.Ru?.Description, x.Description),
+            PublicTranslationHelpers.PickNullable(x.Requested?.BadgeText, x.Ru?.BadgeText, x.BadgeText),
+            x.ImageUrl, x.SortOrder));
 
         return Results.Ok(items);
     }

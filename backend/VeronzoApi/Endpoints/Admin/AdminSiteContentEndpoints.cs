@@ -96,6 +96,7 @@ public static class AdminSiteContentEndpoints
 
         var item = new SiteContent { Key = request.Key, Value = request.Value };
         db.SiteContents.Add(item);
+        await AdminTranslationSync.SyncSiteContentAsync(db, item, isNew: true, cancellationToken);
 
         var conflict = await AdminEndpointHelpers.TrySaveChangesAsync(db, cancellationToken);
         if (conflict is not null)
@@ -130,6 +131,7 @@ public static class AdminSiteContentEndpoints
 
         item.Key = request.Key;
         item.Value = request.Value;
+        await AdminTranslationSync.SyncSiteContentAsync(db, item, isNew: false, cancellationToken);
 
         var conflict = await AdminEndpointHelpers.TrySaveChangesAsync(db, cancellationToken);
         if (conflict is not null)

@@ -170,6 +170,7 @@ using (var scope = app.Services.CreateScope())
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
     db.Database.Migrate();
     await DbSeeder.SeedCatalogContentAsync(db);
+    await DbSeeder.SeedRussianTranslationsAsync(db);
 
     var passwordHasher = scope.ServiceProvider.GetRequiredService<IPasswordHasher<AdminUser>>();
     var seedLogger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
@@ -223,6 +224,7 @@ app.MapAdminSiteContentEndpoints();
 app.MapAdminSocialLinkEndpoints();
 app.MapAdminContactInfoEndpoints();
 app.MapAdminSeoMetaEndpoints();
+app.MapAdminTranslationEndpoints();
 
 app.MapPublicCategoryEndpoints();
 app.MapPublicProductEndpoints();
