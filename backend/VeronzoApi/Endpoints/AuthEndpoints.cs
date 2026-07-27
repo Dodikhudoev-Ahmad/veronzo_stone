@@ -38,6 +38,16 @@ public static class AuthEndpoints
         var normalizedEmail = submittedEmail.ToUpperInvariant();
         var admin = await db.AdminUsers.FirstOrDefaultAsync(a => a.NormalizedEmail == normalizedEmail, cancellationToken);
 
+        // TEMPORARY diagnostic logging for the production login-401 investigation.
+        // Never logs the submitted password, PasswordHash, JWT secret, or any
+        // token — only the lookup key and the found record's own Email/
+        // NormalizedEmail/IsActive, which are not secrets. Remove once the root
+        // cause of the 401s is confirmed.
+        logger.LogInformation(
+            "Login diagnostic: normalizedEmailFromRequest={NormalizedEmail} adminFound={AdminFound} " +
+            "isActive={IsActive} storedEmail={StoredEmail} storedNormalizedEmail={StoredNormalizedEmail}",
+            normalizedEmail, admin is not null, admin?.IsActive, admin?.Email, admin?.NormalizedEmail);
+
         // Same generic outcome whether the email doesn't exist, the account is
         // disabled, or the password is wrong — never reveal which case applied.
         var invalid = admin is null || !admin.IsActive;
@@ -45,6 +55,15 @@ public static class AuthEndpoints
         {
             var verification = passwordHasher.VerifyHashedPassword(admin!, admin!.PasswordHash, request.Password);
             invalid = verification == PasswordVerificationResult.Failed;
+
+            // TEMPORARY — see above. PasswordVerificationResult has no useful
+            // ToString() override risk of leaking anything: its only values are
+            // the enum names Failed/Success/SuccessRehashNeeded.
+            logger.LogInformation("Login diagnostic: passwordVerification={VerificationResult}", verification);
+        }
+        else
+        {
+            logger.LogInformation("Login diagnostic: passwordVerification=(not attempted — no matching active admin)");
         }
 
         if (invalid)
