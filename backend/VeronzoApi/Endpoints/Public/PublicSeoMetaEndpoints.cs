@@ -17,16 +17,18 @@ public static class PublicSeoMetaEndpoints
             .WithSummary("Get SEO metadata for a page")
             .WithDescription(
                 "Public, unauthenticated. Looks up by PageKey (e.g. \"home\"). Optional ?lang= " +
-                "(ru/tg/en/zh, default ru) with ru-then-legacy-field fallback for Title/Description. " +
-                "OgImageUrl is a URL and never varies by language.")
+                "(ru/tg/en/zh, default ru), else falls back to the Accept-Language header, with " +
+                "ru-then-legacy-field fallback for Title/Description. OgImageUrl is a URL and never " +
+                "varies by language.")
             .Produces<PublicSeoMetaResponse>(StatusCodes.Status200OK)
-            .Produces<ApiErrorResponse>(StatusCodes.Status404NotFound);
+            .Produces<ApiErrorResponse>(StatusCodes.Status404NotFound)
+            .CacheOutput("PublicContent");
     }
 
     private static async Task<IResult> GetByPageKeyAsync(
-        string pageKey, string? lang, AppDbContext db, CancellationToken cancellationToken)
+        string pageKey, string? lang, AppDbContext db, HttpContext httpContext, CancellationToken cancellationToken)
     {
-        var language = SupportedLanguages.Normalize(lang);
+        var language = PublicTranslationHelpers.ResolveLanguage(lang, httpContext);
 
         var raw = await db.SeoMetas
             .AsNoTracking()

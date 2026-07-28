@@ -14,14 +14,17 @@ public static class PublicContactInfoEndpoints
             .WithDescription(
                 "Public, unauthenticated. ContactInfo has no IsVisible flag — every entry (showroom, " +
                 "phone, email) is public by design, so all rows are returned, ordered by SortOrder then Id. " +
-                "Optional ?lang= (ru/tg/en/zh, default ru) with ru-then-legacy-field fallback for Label only " +
-                "— Value holds phone/email/address text and is never translated.")
-            .Produces<PublicContactInfoResponse[]>(StatusCodes.Status200OK);
+                "Optional ?lang= (ru/tg/en/zh, default ru), else falls back to the Accept-Language header, " +
+                "with ru-then-legacy-field fallback for Label only — Value holds phone/email/address text " +
+                "and is never translated.")
+            .Produces<PublicContactInfoResponse[]>(StatusCodes.Status200OK)
+            .CacheOutput("PublicContent");
     }
 
-    private static async Task<IResult> ListAsync(string? lang, AppDbContext db, CancellationToken cancellationToken)
+    private static async Task<IResult> ListAsync(
+        string? lang, AppDbContext db, HttpContext httpContext, CancellationToken cancellationToken)
     {
-        var language = SupportedLanguages.Normalize(lang);
+        var language = PublicTranslationHelpers.ResolveLanguage(lang, httpContext);
 
         var raw = await db.ContactInfos
             .AsNoTracking()

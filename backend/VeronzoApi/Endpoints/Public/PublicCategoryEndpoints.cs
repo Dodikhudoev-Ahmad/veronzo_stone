@@ -13,15 +13,17 @@ public static class PublicCategoryEndpoints
             .WithSummary("List visible categories")
             .WithDescription(
                 "Public, unauthenticated. Only IsVisible=true categories, ordered by SortOrder then Id. " +
-                "Optional ?lang= (ru/tg/en/zh, default ru); an unknown/missing value falls back to ru, " +
-                "and a category with no translation for the requested language falls back to its ru " +
-                "translation, then to its legacy Name field.")
-            .Produces<PublicCategoryResponse[]>(StatusCodes.Status200OK);
+                "Optional ?lang= (ru/tg/en/zh, default ru), else falls back to the Accept-Language header; " +
+                "an unknown/missing value falls back to ru, and a category with no translation for the " +
+                "requested language falls back to its ru translation, then to its legacy Name field.")
+            .Produces<PublicCategoryResponse[]>(StatusCodes.Status200OK)
+            .CacheOutput("PublicContent");
     }
 
-    private static async Task<IResult> ListAsync(string? lang, AppDbContext db, CancellationToken cancellationToken)
+    private static async Task<IResult> ListAsync(
+        string? lang, AppDbContext db, HttpContext httpContext, CancellationToken cancellationToken)
     {
-        var language = SupportedLanguages.Normalize(lang);
+        var language = PublicTranslationHelpers.ResolveLanguage(lang, httpContext);
 
         var raw = await db.Categories
             .AsNoTracking()

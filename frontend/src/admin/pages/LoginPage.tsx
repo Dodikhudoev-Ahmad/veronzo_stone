@@ -52,7 +52,9 @@ export default function LoginPage() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-bg px-4 font-sans">
       <div className="w-full max-w-sm rounded-lg border border-cream-soft bg-bg-alt p-8 shadow-sm">
-        <div className="mb-8 text-center font-serif text-2xl font-semibold tracking-widest text-text">VERONZO</div>
+        <div className="mb-8 flex justify-center">
+          <img src="/assets/images/logo-veronzo.png" alt="VERONZO" className="h-6 w-auto" />
+        </div>
         <form onSubmit={(event) => void handleSubmit(onSubmit)(event)} className="flex flex-col gap-4" noValidate>
           <div className="flex flex-col gap-1.5">
             <label htmlFor="email" className="text-xs font-semibold uppercase tracking-wide text-muted">

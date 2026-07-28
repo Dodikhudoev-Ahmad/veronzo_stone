@@ -14,7 +14,9 @@ const NAV_ITEMS = [
 export function Sidebar() {
   return (
     <aside className="flex w-64 shrink-0 flex-col bg-dark px-5 py-8">
-      <div className="mb-10 px-2 font-serif text-2xl font-semibold tracking-widest text-cream">VERONZO</div>
+      <div className="mb-10 px-2">
+        <img src="/assets/images/logo-veronzo-white.png" alt="VERONZO" className="h-5 w-auto" />
+      </div>
       <nav className="flex flex-col gap-1">
         {NAV_ITEMS.map((item) => (
           <NavLink

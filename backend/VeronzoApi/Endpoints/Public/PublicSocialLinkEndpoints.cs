@@ -13,7 +13,8 @@ public static class PublicSocialLinkEndpoints
             .WithDescription(
                 "Public, unauthenticated. Only IsVisible=true links. SocialLink has no SortOrder — " +
                 "ordered by Id (insertion order) for a stable, predictable response.")
-            .Produces<PublicSocialLinkResponse[]>(StatusCodes.Status200OK);
+            .Produces<PublicSocialLinkResponse[]>(StatusCodes.Status200OK)
+            .CacheOutput("PublicContent");
     }
 
     private static async Task<IResult> ListAsync(AppDbContext db, CancellationToken cancellationToken)

@@ -123,6 +123,19 @@ builder.Services.AddRateLimiter(options =>
                 Window = TimeSpan.FromMinutes(1),
                 QueueLimit = 0
             }));
+    // POST /api/contact is public/unauthenticated and triggers a DB write plus an
+    // outbound email — previously unthrottled, so it was open to spam/abuse at
+    // unlimited rate. Looser than "auth" since a real visitor might legitimately
+    // retry once after a network error.
+    options.AddPolicy("contact", context =>
+        RateLimitPartition.GetFixedWindowLimiter(
+            partitionKey: context.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+            factory: _ => new FixedWindowRateLimiterOptions
+            {
+                PermitLimit = 3,
+                Window = TimeSpan.FromMinutes(5),
+                QueueLimit = 0
+            }));
 });
 
 // Railway terminates TLS at its edge and forwards plain HTTP to this container over a
@@ -171,6 +184,19 @@ builder.Services.AddCors(options =>
             .AllowAnyHeader()
             .AllowAnyMethod()
             .AllowCredentials());
+});
+
+// Public content changes only through the admin UI, so a short server-side cache
+// is safe and cuts DB load on the read-heavy public endpoints without needing any
+// invalidation logic — a stale response is at most 60s old. Varies by the same two
+// inputs that affect the response body (?lang= and Accept-Language) so cached
+// responses never leak across languages.
+builder.Services.AddOutputCache(options =>
+{
+    options.AddPolicy("PublicContent", policy => policy
+        .Expire(TimeSpan.FromSeconds(60))
+        .SetVaryByQuery("lang", "categorySlug")
+        .SetVaryByHeader("Accept-Language", "Origin"));
 });
 
 var app = builder.Build();
@@ -230,6 +256,7 @@ app.UseCors(CorsPolicyName);
 app.UseAuthentication();
 app.UseAuthorization();
 app.UseRateLimiter();
+app.UseOutputCache();
 
 app.MapAuthEndpoints();
 
@@ -285,6 +312,7 @@ app.MapPost("/api/contact", async (
 
         return Results.Created($"/api/contact/{entity.Id}", new { entity.Id });
     })
-    .WithName("SubmitContact");
+    .WithName("SubmitContact")
+    .RequireRateLimiting("contact");
 
 app.Run();

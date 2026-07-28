@@ -15,13 +15,16 @@ public static class PublicSiteContentEndpoints
                 "Public, unauthenticated. SiteContent has no IsVisible flag — every key/value pair is " +
                 "public text content by design (hero copy, about/why/contacts text, footer tagline), " +
                 "so all rows are returned, ordered by Key for a predictable/stable response. Optional " +
-                "?lang= (ru/tg/en/zh, default ru) with ru-then-legacy-field fallback for Value.")
-            .Produces<PublicSiteContentResponse[]>(StatusCodes.Status200OK);
+                "?lang= (ru/tg/en/zh, default ru), else falls back to the Accept-Language header, with " +
+                "ru-then-legacy-field fallback for Value.")
+            .Produces<PublicSiteContentResponse[]>(StatusCodes.Status200OK)
+            .CacheOutput("PublicContent");
     }
 
-    private static async Task<IResult> ListAsync(string? lang, AppDbContext db, CancellationToken cancellationToken)
+    private static async Task<IResult> ListAsync(
+        string? lang, AppDbContext db, HttpContext httpContext, CancellationToken cancellationToken)
     {
-        var language = SupportedLanguages.Normalize(lang);
+        var language = PublicTranslationHelpers.ResolveLanguage(lang, httpContext);
 
         var raw = await db.SiteContents
             .AsNoTracking()

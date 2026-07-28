@@ -186,7 +186,7 @@ Status: COMPLETED
 Они должны быть удалены после завершения диагностики.
 
 ## Stage 16 — Production authentication cleanup
-Status: IN PROGRESS
+Status: COMPLETED
 
 - определить причину production login failure;
 - проверить adminFound;
@@ -210,7 +210,7 @@ Definition of Done:
 - review passed.
 
 ## Stage 17 — Public API for dynamic content
-Status: PLANNED
+Status: COMPLETED
 
 - read-only public endpoints;
 - categories;
@@ -227,7 +227,7 @@ Status: PLANNED
 - caching strategy.
 
 ## Stage 18 — Public frontend migration to React
-Status: PLANNED
+Status: COMPLETED
 
 - перенести публичный сайт в React;
 - сохранить текущий дизайн;
@@ -238,7 +238,7 @@ Status: PLANNED
 - public site остаётся без login.
 
 ## Stage 19 — New catalog architecture
-Status: PLANNED
+Status: COMPLETED
 
 - отдельные страницы категорий;
 - category slug routes;
@@ -249,7 +249,7 @@ Status: PLANNED
 - multilingual catalog content.
 
 ## Stage 20 — Windows category
-Status: PLANNED
+Status: COMPLETED
 
 - добавить категорию Окна;
 - slug windows;
@@ -262,7 +262,7 @@ Status: PLANNED
 - обновить footer/catalog/navigation.
 
 ## Stage 21 — Brand and visual modernization
-Status: PLANNED
+Status: COMPLETED (logo replacement only — see docs/PROGRESS.md)
 
 - новый логотип;
 - обновлённая visual identity;
@@ -272,7 +272,7 @@ Status: PLANNED
 - без потери узнаваемости бренда.
 
 ## Stage 22 — Production readiness
-Status: PLANNED
+Status: COMPLETED (code/docs items only — see docs/PROGRESS.md for what's deliberately left open)
 
 - sitemap.xml;
 - robots.txt;

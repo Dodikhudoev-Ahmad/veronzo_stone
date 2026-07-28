@@ -59,9 +59,11 @@ public static class DbSeeder
         var stone = await SeedCategoryAsync(db, "stone", "Камень", 1, isVisible: true);
         var doors = await SeedCategoryAsync(db, "doors", "Двери", 2, isVisible: true);
         var lifts = await SeedCategoryAsync(db, "lifts", "Лифты", 3, isVisible: true);
-        // No real copy/photos exist for this direction yet — kept hidden until the
-        // owner supplies them and an admin flips IsVisible on.
-        var windows = await SeedCategoryAsync(db, "windows", "Окна", 4, isVisible: false);
+        // Stage 20: real photos/copy for this direction still don't exist — visible
+        // with placeholder content (reusing the doors photo) rather than invented
+        // specifics. Replace Product.ImageUrl/Description and add real
+        // PortfolioItem photos via the admin CMS once the owner supplies them.
+        var windows = await SeedCategoryAsync(db, "windows", "Окна", 4, isVisible: true);
 
         await SeedProductAsync(db, stone.Id, "Камень",
             "Мрамор, оникс, травертин и гранит — облицовка, полы, порталы, фасады.",
@@ -73,9 +75,9 @@ public static class DbSeeder
             "Панорамные и представительские кабины в едином материале с интерьером.",
             badgeText: "ОТДЕЛКА КАБИН →", imageUrl: "assets/images/catalog-lifts", sortOrder: 1, isVisible: true);
         await SeedProductAsync(db, windows.Id, "Окна",
-            "TODO: реальные данные — описание направления «Окна» ожидает предоставления заказчиком.",
-            // No real badge copy or photo exists yet — left null rather than invented.
-            badgeText: null, imageUrl: null, sortOrder: 1, isVisible: false);
+            "Оконные системы и алюминиевые фасадные конструкции для премиум-объектов.",
+            // Placeholder photo (reused from "doors") pending real product photography.
+            badgeText: "СКОРО В КАТАЛОГЕ →", imageUrl: "assets/images/catalog-doors", sortOrder: 1, isVisible: true);
 
         await SeedPortfolioItemAsync(db, "Резиденция «Остоженка»", "Мрамор Calacatta · частный дом · 2025",
             categoryTag: "КАМЕНЬ", imageUrl: "assets/images/portfolio-ostozhenka", sortOrder: 1, isVisible: true, isFeatured: true);
@@ -89,6 +91,9 @@ public static class DbSeeder
             categoryTag: null, imageUrl: "assets/images/portfolio-meridian", sortOrder: 5, isVisible: true, isFeatured: false);
         await SeedPortfolioItemAsync(db, "Вилла на Рублёвке", "Травертин · комплекс",
             categoryTag: null, imageUrl: "assets/images/portfolio-rublevka", sortOrder: 6, isVisible: true, isFeatured: false);
+        // Placeholder photo (reused from "Lumière") pending a real windows project photo.
+        await SeedPortfolioItemAsync(db, "Клубный дом Lumière — оконные системы", "Панорамное остекление",
+            categoryTag: "ОКНА", imageUrl: "assets/images/portfolio-lumiere", sortOrder: 7, isVisible: true, isFeatured: false);
 
         await SeedHeroStatAsync(db, "лет на рынке", 18, "", 1);
         await SeedHeroStatAsync(db, "объектов сдано", 340, "+", 2);
@@ -110,10 +115,10 @@ public static class DbSeeder
             "Натуральный камень, элитные двери и лифтовые решения под единым технадзором — для архитекторов, дизайнеров и премиум-застройщиков.");
         await SeedSiteContentAsync(db, "hero.imageTag", "CALACATTA · SIGNATURE");
         await SeedSiteContentAsync(db, "catalog.sectionNote",
-            "Три направления, единый стандарт качества — от подбора материала до монтажа на объекте.");
+            "Четыре направления, единый стандарт качества — от подбора материала до монтажа на объекте.");
         await SeedSiteContentAsync(db, "about.heading", "Одно ателье — от карьера до сданного объекта");
         await SeedSiteContentAsync(db, "about.paragraph1",
-            "Мы объединяем три компетенции, которые обычно приходится собирать у разных подрядчиков: добычу и обработку натурального камня, столярное производство элитных дверей и инженерию лифтовых решений. Единый технадзор исключает стыковочные ошибки на объекте.");
+            "Мы объединяем четыре компетенции, которые обычно приходится собирать у разных подрядчиков: добычу и обработку натурального камня, столярное производство элитных дверей, оконные системы и инженерию лифтовых решений. Единый технадзор исключает стыковочные ошибки на объекте.");
         await SeedSiteContentAsync(db, "about.paragraph2",
             "С проектом работает выделенная команда: архитектор проекта, технолог по камню и инженер. Мы говорим на языке чертежей и спецификаций.");
         await SeedSiteContentAsync(db, "why.heading", "Партнёр, на которого можно опереться в проекте");

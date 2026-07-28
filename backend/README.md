@@ -83,3 +83,32 @@ curl -X POST https://<project>.up.railway.app/api/contact \
   -d '{"name":"Тест","contact":"+7 900 000-00-00"}'
 ```
 Ожидается `201` и запись в БД. Логи — Railway → Deployments → View Logs.
+
+## 6. Backup и восстановление БД (Stage 22)
+
+БД — один файл SQLite на Railway volume (см. раздел 3), поэтому backup/restore сводится к копированию файла.
+
+**Backup** (вручную, пока нет автоматизации):
+- Railway → сервис → Volumes → тот volume, что примонтирован как `RAILWAY_VOLUME_MOUNT_PATH`;
+- скачать `veronzo.db` можно через `railway ssh` (Railway CLI) — `railway ssh` → `cp /data/veronzo.db /tmp/backup-$(date +%F).db`, затем скачать файл локально (`railway ssh` не даёт scp напрямую — проще временно поднять файл через любой уже существующий static-file endpoint, либо `cat` файл в base64 и сохранить локально);
+- рекомендуемая частота — перед каждой миграцией схемы и не реже раза в неделю; хранить копии вне Railway (например, в защищённом облачном хранилище), не в git.
+
+**Восстановление**:
+- остановить сервис (Railway → Settings → отключить или временно удалить домен, чтобы не принимать трафик во время восстановления);
+- через `railway ssh` заменить `/data/veronzo.db` восстанавливаемой копией;
+- перезапустить сервис — при старте `db.Database.Migrate()` применит только недостающие миграции, существующие данные не трогает.
+
+**Ограничение**: автоматического scheduled backup нет — это ручной процесс. Полноценная автоматизация (например, периодический job, копирующий volume в S3-совместимое хранилище) — кандидат на отдельную задачу, не входит в этот Stage.
+
+## 7. Production checklist (Stage 22)
+
+- [x] `sitemap.xml` / `robots.txt` — `frontend/public/`, обслуживаются на домене Netlify
+- [x] Canonical URL — устанавливается на клиенте (`useCanonical`) для `/`, `/catalog/:slug`, `/catalog/:slug/:id`; статический fallback в `frontend/index.html`
+- [x] Open Graph — `frontend/index.html` (статический fallback) + динамическое обновление на главной через `/api/public/seo-meta/home`
+- [x] Structured data — JSON-LD `Organization` (главная), `Product` (карточка товара)
+- [x] Rate limiting — `/api/auth/*` (5/мин), `/api/contact` (3/5мин); публичные `GET /api/public/*` не лимитированы отдельно, но кэшируются (`OutputCache`, 60с), что снижает нагрузку на БД
+- [x] Backup/recovery — см. раздел 6 (ручной процесс, задокументирован)
+- [ ] Автоматизированные smoke-тесты — не реализованы (нет test-проекта в решении); ручная проверка — раздел 5 этого файла + логин/refresh/logout/me в админке
+- [ ] Углублённый accessibility-аудит (axe/Lighthouse) — не выполнялся, только точечные ARIA-атрибуты по ходу разработки
+- [ ] `Cors__AllowedOrigins__0` в Railway — задать явно (см. раздел 2), не полагаться на `appsettings.json` по умолчанию
+- [ ] `ForwardedHeaders__KnownProxies__0`/`KnownNetworks__0` — не задан; см. ограничение в разделе 2e
