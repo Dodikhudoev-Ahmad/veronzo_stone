@@ -31,8 +31,23 @@ var defaultConnectionString = railwayVolumePath is not null
     ? $"Data Source={Path.Combine(railwayVolumePath, "veronzo.db")}"
     : "Data Source=veronzo.db";
 
-builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseSqlite(builder.Configuration.GetConnectionString("Default") ?? defaultConnectionString));
+var connectionStringOverride = builder.Configuration.GetConnectionString("Default");
+var resolvedConnectionString = connectionStringOverride ?? defaultConnectionString;
+// If RAILWAY_VOLUME_MOUNT_PATH is ever unset for this service (volume not
+// attached, detached, or attached to a different service), this silently
+// falls back to a path inside the container's own ephemeral filesystem
+// (WORKDIR /app in the Dockerfile) — every redeploy/restart then starts from
+// a brand-new, empty database with no error at all. Logged once at startup
+// (path only, never credentials — SQLite connection strings don't carry any)
+// so that exact failure mode is visible in Railway's deploy logs instead of
+// only showing up indirectly as "AdminUsers is empty".
+var connectionStringSource = connectionStringOverride is not null
+    ? "ConnectionStrings:Default (explicit override)"
+    : railwayVolumePath is not null
+        ? "RAILWAY_VOLUME_MOUNT_PATH"
+        : "local fallback — NOT the persistent volume, ephemeral in containers";
+
+builder.Services.AddDbContext<AppDbContext>(options => options.UseSqlite(resolvedConnectionString));
 
 builder.Services.Configure<ResendOptions>(builder.Configuration.GetSection(ResendOptions.SectionName));
 builder.Services.AddHttpClient<IEmailSender, ResendEmailSender>(client =>
@@ -168,6 +183,9 @@ app.UseForwardedHeaders();
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+    app.Logger.LogInformation(
+        "SQLite database path resolved via {Source}: {ConnectionString}",
+        connectionStringSource, resolvedConnectionString);
     db.Database.Migrate();
     await DbSeeder.SeedCatalogContentAsync(db);
     await DbSeeder.SeedRussianTranslationsAsync(db);
@@ -175,7 +193,6 @@ using (var scope = app.Services.CreateScope())
     var passwordHasher = scope.ServiceProvider.GetRequiredService<IPasswordHasher<AdminUser>>();
     var seedLogger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
     await DbSeeder.SeedAdminUserAsync(db, passwordHasher, builder.Configuration, seedLogger);
-    await DbSeeder.ResetAdminPasswordIfRequestedAsync(db, passwordHasher, builder.Configuration, app.Environment, seedLogger);
 }
 
 if (app.Environment.IsDevelopment())

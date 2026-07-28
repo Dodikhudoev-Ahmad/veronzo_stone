@@ -1,9 +1,6 @@
-using System.Security.Cryptography;
-using System.Text;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using VeronzoApi.Models;
 
@@ -49,96 +46,6 @@ public static class DbSeeder
         db.AdminUsers.Add(admin);
         await db.SaveChangesAsync();
         logger.LogInformation("Created initial admin account for {Email}", admin.Email);
-    }
-
-    // One-shot, env-var-gated password reset for an *existing* admin account —
-    // for recovering from a lost/incorrect production password without touching
-    // the volume, re-running migrations, or exposing a permanent HTTP endpoint.
-    // Intentionally does nothing unless all three ADMIN_RESET_* vars are set,
-    // the token matches, an admin with that email already exists, and the app
-    // is running in Production — every other combination is a silent no-op, so
-    // leaving these vars unset (the normal case) never changes behavior, and a
-    // second startup with the same vars just re-hashes the same password
-    // (safe, idempotent — not a security hole, but also pointless, hence the
-    // instruction to remove the vars again after a successful reset).
-    public static async Task ResetAdminPasswordIfRequestedAsync(
-        AppDbContext db, IPasswordHasher<AdminUser> passwordHasher, IConfiguration configuration,
-        IHostEnvironment environment, ILogger logger)
-    {
-        if (!environment.IsProduction())
-        {
-            return;
-        }
-
-        var resetEmail = configuration["ADMIN_RESET_EMAIL"];
-        var resetPassword = configuration["ADMIN_RESET_PASSWORD"];
-        var resetToken = configuration["ADMIN_RESET_TOKEN"];
-
-        if (string.IsNullOrWhiteSpace(resetEmail) || string.IsNullOrWhiteSpace(resetPassword) || string.IsNullOrWhiteSpace(resetToken))
-        {
-            return;
-        }
-
-        // Reuses Jwt:Secret as the "expected value from configuration" the token
-        // must match — Production already requires this to be a strong random
-        // secret (see Program.cs), so this needs no new required config, and
-        // reset can't be triggered by an attacker who can set arbitrary env vars
-        // any more (or less) than they already could by editing Jwt__Secret or
-        // DEFAULT_ADMIN_* directly. Constant-time comparison avoids leaking the
-        // secret's value through response-timing side channels.
-        var expectedToken = configuration["Jwt:Secret"];
-        if (string.IsNullOrWhiteSpace(expectedToken) ||
-            !CryptographicOperations.FixedTimeEquals(Encoding.UTF8.GetBytes(resetToken), Encoding.UTF8.GetBytes(expectedToken)))
-        {
-            logger.LogWarning("Admin password reset requested but ADMIN_RESET_TOKEN did not match the expected value — skipping.");
-            return;
-        }
-
-        // Matched in memory (admin tables are tiny) rather than via a translated
-        // EF query — this is the only way to apply the NormalizedEmail-or-Email
-        // fallback below and lets a lookup miss log the existing emails for
-        // diagnosis without a second round trip.
-        var normalizedResetEmail = resetEmail.Trim().ToLowerInvariant();
-        var allAdmins = await db.AdminUsers.ToListAsync();
-
-        var admin = allAdmins.FirstOrDefault(a =>
-        {
-            var comparisonKey = !string.IsNullOrWhiteSpace(a.NormalizedEmail)
-                ? a.NormalizedEmail.Trim().ToLowerInvariant()
-                : a.Email.Trim().ToLowerInvariant();
-            return comparisonKey == normalizedResetEmail;
-        });
-
-        if (admin is null)
-        {
-            // Emails only — never PasswordHash, tokens, or the Jwt secret — so
-            // this is safe to leave in production logs while diagnosing a
-            // mismatch (e.g. a legacy row with an empty NormalizedEmail).
-            var existingEmails = allAdmins.Select(a => a.Email).ToList();
-            logger.LogWarning(
-                "Admin password reset requested for {RequestedEmail} but no matching admin account exists — " +
-                "skipping. This does not create a new admin. Existing admin emails: {ExistingEmails}",
-                resetEmail.Trim(), existingEmails.Count > 0 ? string.Join(", ", existingEmails) : "(none)");
-            return;
-        }
-
-        // Backfills NormalizedEmail from Email (trimmed) whenever the matched row
-        // needed the fallback above — AuthEndpoints' login lookup only ever
-        // queries NormalizedEmail, so fixing the password alone would leave
-        // login still failing for exactly the legacy rows this reset exists to
-        // recover. Role, IsActive, CreatedAt, and every other admin/content
-        // table are untouched; both this and the password hash are written in
-        // the same SaveChangesAsync so the row never persists in a
-        // half-updated state.
-        admin.Email = admin.Email.Trim();
-        admin.NormalizedEmail = admin.Email.ToUpperInvariant();
-        admin.PasswordHash = passwordHasher.HashPassword(admin, resetPassword);
-        admin.UpdatedAt = DateTime.UtcNow;
-        await db.SaveChangesAsync();
-
-        logger.LogWarning(
-            "Admin password reset completed for {Email}. Remove ADMIN_RESET_EMAIL/ADMIN_RESET_PASSWORD/" +
-            "ADMIN_RESET_TOKEN now — leaving them set is harmless but unnecessary.", admin.Email);
     }
 
     // Seeds catalog/content tables with the copy currently hardcoded in index.html,

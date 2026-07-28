@@ -1,5 +1,14 @@
 # PROGRESS.md — Veronzo Stone
 
+# Current Project Status
+
+- Last completed Stage: 15
+- Current Stage: 16
+- Next planned Stage: 17
+- Official roadmap: docs/ROADMAP.md
+- Current blocker: production admin login diagnostics
+- Temporary diagnostics must be removed after resolution
+
 ## Статус: разработка backend для формы (.NET)
 
 ### Phase 0 — Аудит (сделано)
