@@ -7,7 +7,8 @@
       "Bash(npx --yes playwright install chromium --with-deps)",
       "Bash(npx playwright *)",
       "Read(//Users/burble/Library/Caches/ms-playwright/**)",
-      "Bash(find / -maxdepth 4 -iname \"*playwright*\" -path \"*Caches*\")"
+      "Bash(find / -maxdepth 4 -iname \"*playwright*\" -path \"*Caches*\")",
+      "Bash(sqlite3 veronzo.db \"SELECT ct.Id, ct.CategoryId, c.Slug, ct.LanguageCode, ct.Name FROM CategoryTranslations ct JOIN Categories c ON c.Id = ct.CategoryId WHERE ct.LanguageCode='en' AND c.Slug IN \\('stone','lifts'\\);\")"
     ]
   }
 }

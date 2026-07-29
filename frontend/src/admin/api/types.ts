@@ -97,6 +97,44 @@ export interface SeoMetaResponse {
 }
 export type SeoMetaRequest = Omit<SeoMetaResponse, 'id'>;
 
+export interface ProductAttributeDefinitionResponse {
+  id: number;
+  categoryId: number;
+  key: string;
+  name: string;
+  sortOrder: number;
+  isFilterable: boolean;
+  isVisible: boolean;
+}
+export type ProductAttributeDefinitionRequest = Omit<ProductAttributeDefinitionResponse, 'id'>;
+
+export interface ProductAttributeOptionResponse {
+  id: number;
+  definitionId: number;
+  value: string;
+  label: string;
+  sortOrder: number;
+  isVisible: boolean;
+}
+export type ProductAttributeOptionRequest = Omit<ProductAttributeOptionResponse, 'id'>;
+
+export interface ProductAttributeValueResponse {
+  id: number;
+  productId: number;
+  definitionId: number;
+  optionId: number | null;
+  textValue: string | null;
+}
+export type ProductAttributeValueRequest = Omit<ProductAttributeValueResponse, 'id'>;
+
+export interface ProductImageResponse {
+  id: number;
+  productId: number;
+  imageUrl: string;
+  sortOrder: number;
+}
+export type ProductImageRequest = Omit<ProductImageResponse, 'id'>;
+
 export interface GalleryItemResponse {
   id: number;
   title: string;

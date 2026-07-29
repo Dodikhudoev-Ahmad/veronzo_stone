@@ -13,4 +13,6 @@ public class Product
     public int SortOrder { get; set; }
     public bool IsVisible { get; set; } = true;
     public ICollection<ProductTranslation> Translations { get; set; } = new List<ProductTranslation>();
+    public ICollection<ProductAttributeValue> AttributeValues { get; set; } = new List<ProductAttributeValue>();
+    public ICollection<ProductImage> Images { get; set; } = new List<ProductImage>();
 }

@@ -1,38 +1,15 @@
-import { NavLink } from 'react-router-dom';
+import { AdminNavLinks } from './AdminNavLinks';
 
-const NAV_ITEMS = [
-  { to: '/admin', label: 'Дашборд', end: true },
-  { to: '/admin/categories', label: 'Категории' },
-  { to: '/admin/products', label: 'Товары' },
-  { to: '/admin/portfolio', label: 'Портфолио' },
-  { to: '/admin/gallery', label: 'Галерея' },
-  { to: '/admin/content', label: 'Контент' },
-  { to: '/admin/seo', label: 'SEO' },
-  { to: '/admin/settings', label: 'Настройки' },
-];
-
+// Permanent on desktop (>=1024px); hidden below that in favor of
+// MobileNavDrawer, which renders the same AdminNavLinks so items and their
+// styling never duplicate/drift between the two.
 export function Sidebar() {
   return (
-    <aside className="flex w-64 shrink-0 flex-col bg-dark px-5 py-8">
+    <aside className="hidden w-64 shrink-0 flex-col bg-dark px-5 py-8 lg:flex">
       <div className="mb-10 px-2">
         <img src="/assets/images/logo-veronzo-white.png" alt="VERONZO" className="h-5 w-auto" />
       </div>
-      <nav className="flex flex-col gap-1">
-        {NAV_ITEMS.map((item) => (
-          <NavLink
-            key={item.to}
-            to={item.to}
-            end={item.end}
-            className={({ isActive }) =>
-              `rounded-md px-3 py-2 text-sm transition ${
-                isActive ? 'bg-accent text-cream' : 'text-nav-muted hover:bg-white/5 hover:text-cream'
-              }`
-            }
-          >
-            {item.label}
-          </NavLink>
-        ))}
-      </nav>
+      <AdminNavLinks />
     </aside>
   );
 }

@@ -197,6 +197,16 @@ builder.Services.AddOutputCache(options =>
         .Expire(TimeSpan.FromSeconds(60))
         .SetVaryByQuery("lang", "categorySlug")
         .SetVaryByHeader("Accept-Language", "Origin"));
+
+    // The products list also accepts arbitrary admin-defined attribute filter
+    // keys (e.g. ?stone_type=marble) that "PublicContent" doesn't know about --
+    // varying only by lang/categorySlug would let two different filter
+    // combinations collide on the same cache entry and serve each other's
+    // results. Vary by the full raw query string instead.
+    options.AddPolicy("PublicProductsContent", policy => policy
+        .Expire(TimeSpan.FromSeconds(60))
+        .VaryByValue(context => new KeyValuePair<string, string>("q", context.Request.QueryString.Value ?? string.Empty))
+        .SetVaryByHeader("Accept-Language", "Origin"));
 });
 
 var app = builder.Build();
@@ -214,6 +224,7 @@ using (var scope = app.Services.CreateScope())
         connectionStringSource, resolvedConnectionString);
     db.Database.Migrate();
     await DbSeeder.SeedCatalogContentAsync(db);
+    await DbSeeder.SeedProductAttributesAsync(db);
     await DbSeeder.SeedRussianTranslationsAsync(db);
 
     var passwordHasher = scope.ServiceProvider.GetRequiredService<IPasswordHasher<AdminUser>>();
@@ -262,6 +273,10 @@ app.MapAuthEndpoints();
 
 app.MapAdminCategoryEndpoints();
 app.MapAdminProductEndpoints();
+app.MapAdminProductAttributeDefinitionEndpoints();
+app.MapAdminProductAttributeOptionEndpoints();
+app.MapAdminProductAttributeValueEndpoints();
+app.MapAdminProductImageEndpoints();
 app.MapAdminPortfolioItemEndpoints();
 app.MapAdminGalleryItemEndpoints();
 app.MapAdminHeroStatEndpoints();
@@ -273,6 +288,7 @@ app.MapAdminTranslationEndpoints();
 
 app.MapPublicCategoryEndpoints();
 app.MapPublicProductEndpoints();
+app.MapPublicProductAttributeEndpoints();
 app.MapPublicPortfolioItemEndpoints();
 app.MapPublicGalleryItemEndpoints();
 app.MapPublicHeroStatEndpoints();

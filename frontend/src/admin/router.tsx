@@ -10,6 +10,7 @@ const LoginPage = lazy(() => import('./pages/LoginPage'));
 const DashboardPage = lazy(() => import('./pages/DashboardPage'));
 const CategoriesPage = lazy(() => import('./pages/CategoriesPage'));
 const ProductsPage = lazy(() => import('./pages/ProductsPage'));
+const ProductAttributesPage = lazy(() => import('./pages/ProductAttributesPage'));
 const PortfolioPage = lazy(() => import('./pages/PortfolioPage'));
 const GalleryPage = lazy(() => import('./pages/GalleryPage'));
 const ContentPage = lazy(() => import('./pages/ContentPage'));
@@ -20,7 +21,7 @@ export function AdminRouter() {
   return (
     <Routes>
       <Route
-        path="/admin/login"
+        path="login"
         element={
           <Suspense fallback={<AdminLoader />}>
             <LoginPage />
@@ -28,13 +29,14 @@ export function AdminRouter() {
         }
       />
 
-      <Route path="/admin" element={<ProtectedRoute />}>
+      <Route path="" element={<ProtectedRoute />}>
         {/* AdminLayout owns a single Suspense boundary around <Outlet/>, so
             pages nested here don't need their own. */}
         <Route element={<AdminLayout />}>
           <Route index element={<DashboardPage />} />
           <Route path="categories" element={<CategoriesPage />} />
           <Route path="products" element={<ProductsPage />} />
+          <Route path="product-attributes" element={<ProductAttributesPage />} />
           <Route path="portfolio" element={<PortfolioPage />} />
           <Route path="gallery" element={<GalleryPage />} />
           <Route path="content" element={<ContentPage />} />

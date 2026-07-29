@@ -10,8 +10,11 @@ import { ErrorState } from '../components/ui/ErrorState';
 import { ConfirmDialog } from '../components/ui/ConfirmDialog';
 import { ImagePreview } from '../components/ui/ImagePreview';
 import { ProductFormDialog } from '../features/products/ProductFormDialog';
+import { ProductGalleryModal } from '../features/products/ProductGalleryModal';
 import type { ProductFormValues } from '../features/products/productSchema';
 import { useCategoryOptions } from '../features/products/useCategoryOptions';
+import { useSyncProductAttributeValues } from '../features/products/useSyncProductAttributeValues';
+import type { AttributeSelection } from '../features/products/attributeSelection';
 import { TranslationEditorModal } from '../features/translations/TranslationEditorModal';
 import { TRANSLATION_FIELD_CONFIGS } from '../features/translations/translationFieldConfig';
 import { useCreateProduct, useDeleteProduct, useProducts, useUpdateProduct } from '../hooks/useProducts';
@@ -49,6 +52,7 @@ export default function ProductsPage() {
   const [dialogState, setDialogState] = useState<DialogState>(null);
   const [deleteTarget, setDeleteTarget] = useState<ProductResponse | null>(null);
   const [translationsTarget, setTranslationsTarget] = useState<ProductResponse | null>(null);
+  const [galleryTarget, setGalleryTarget] = useState<ProductResponse | null>(null);
 
   // A new search/category filter/sort invalidates the current page position.
   // Reset during render (React's documented "adjusting state when a dependency
@@ -82,25 +86,41 @@ export default function ProductsPage() {
   const createMutation = useCreateProduct();
   const updateMutation = useUpdateProduct();
   const deleteMutation = useDeleteProduct();
+  const { sync: syncAttributeValues } = useSyncProductAttributeValues();
 
-  function handleSubmit(values: ProductFormValues) {
+  // ProductAttributeValue rows are a separate backend resource keyed by
+  // ProductId (Stage 23a) — they can only be created/updated/deleted once the
+  // product's own id is known, so this always runs as a second step after the
+  // product mutation itself has succeeded. A failure here doesn't roll back
+  // the product save (there's no cross-resource transaction), so it's
+  // surfaced as its own toast rather than folded into the product's.
+  async function syncAttributesAndNotify(productId: number, selections: AttributeSelection[]) {
+    const { failedCount } = await syncAttributeValues(productId, selections);
+    if (failedCount > 0) {
+      toast.error(`Товар сохранён, но ${failedCount} характеристик(и) не удалось сохранить. Откройте товар ещё раз и повторите.`);
+    }
+  }
+
+  function handleSubmit(values: ProductFormValues, attributeSelections: AttributeSelection[]) {
     const payload = toProductRequest(values);
     if (dialogState?.mode === 'edit') {
       updateMutation.mutate(
         { id: dialogState.product.id, payload },
         {
-          onSuccess: () => {
+          onSuccess: (updated) => {
             toast.success('Товар обновлён');
             setDialogState(null);
+            void syncAttributesAndNotify(updated.id, attributeSelections);
           },
           onError: (error) => toast.error(getApiErrorMessage(error, 'Не удалось обновить товар')),
         },
       );
     } else {
       createMutation.mutate(payload, {
-        onSuccess: () => {
+        onSuccess: (created) => {
           toast.success('Товар создан');
           setDialogState(null);
+          void syncAttributesAndNotify(created.id, attributeSelections);
         },
         onError: (error) => toast.error(getApiErrorMessage(error, 'Не удалось создать товар')),
       });
@@ -154,6 +174,14 @@ export default function ProductsPage() {
             onClick={() => setTranslationsTarget(p)}
           >
             Переводы
+          </button>
+          <button
+            type="button"
+            aria-label={`Галерея «${p.title}»`}
+            className="text-accent hover:underline"
+            onClick={() => setGalleryTarget(p)}
+          >
+            Галерея
           </button>
           <button
             type="button"
@@ -281,6 +309,12 @@ export default function ProductsPage() {
         id={translationsTarget?.id ?? null}
         entityTitle={translationsTarget ? `«${translationsTarget.title}»` : ''}
         fields={TRANSLATION_FIELD_CONFIGS.products}
+      />
+
+      <ProductGalleryModal
+        open={galleryTarget !== null}
+        onClose={() => setGalleryTarget(null)}
+        product={galleryTarget}
       />
     </div>
   );

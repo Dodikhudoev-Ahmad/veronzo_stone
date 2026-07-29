@@ -7,7 +7,7 @@ public static class SupportedLanguages
 {
     public const string Default = "ru";
 
-    public static readonly IReadOnlyList<string> All = ["ru", "tg", "en", "zh"];
+    public static readonly IReadOnlyList<string> All = ["ru", "tg", "en", "fa"];
 
     public static bool IsSupported(string? languageCode) =>
         !string.IsNullOrWhiteSpace(languageCode) && All.Contains(languageCode.Trim().ToLowerInvariant());

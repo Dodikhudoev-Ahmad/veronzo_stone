@@ -10,7 +10,9 @@ export type TranslatableEntity =
   | 'site-content'
   | 'hero-stats'
   | 'seo-meta'
-  | 'contact-info';
+  | 'contact-info'
+  | 'product-attribute-definitions'
+  | 'product-attribute-options';
 
 export interface TranslationResponse {
   languageCode: string;

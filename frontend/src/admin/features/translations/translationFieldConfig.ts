@@ -44,4 +44,6 @@ export const TRANSLATION_FIELD_CONFIGS: Record<TranslatableEntity, TranslationFi
     { key: 'OgDescription', label: 'OG Description', multiline: true, maxLength: 500 },
   ],
   'contact-info': [{ key: 'Label', label: 'Подпись', required: true, maxLength: 200 }],
+  'product-attribute-definitions': [{ key: 'Name', label: 'Название', required: true, maxLength: 200 }],
+  'product-attribute-options': [{ key: 'Label', label: 'Подпись', required: true, maxLength: 200 }],
 };

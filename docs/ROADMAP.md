@@ -288,3 +288,89 @@ Status: COMPLETED (code/docs items only — see docs/PROGRESS.md for what's deli
 - Railway/Netlify environment documentation;
 - smoke tests;
 - final production checklist.
+
+## Stage 23a — Product attribute/filter backend
+Status: COMPLETED
+
+- ProductAttributeDefinition/Option/Value entities + migration;
+- admin CRUD endpoints для definitions/options/values;
+- public filter-metadata endpoint (categorySlug → filterable attributes);
+- whitelist-based dynamic filtering на GET /api/public/products;
+- backward compatibility текущих Product endpoints;
+- idempotent seed данные для Stone/Doors/Lifts/Windows attributes;
+- backend tests для фильтрации.
+
+## Stage 23b — Admin attribute management
+Status: COMPLETED
+
+- /admin/product-attributes: управление ProductAttributeDefinition/Option по категориям;
+- create/edit/delete definition (key/name/sortOrder/isFilterable/isVisible) + translations ru/tg/en/zh;
+- create/edit/delete option (value/label/sortOrder/isVisible) + translations ru/tg/en/zh;
+- интеграция с Product create/edit: подстановка характеристик выбранной категории, сохранение ProductAttributeValue;
+- Sidebar: пункт «Характеристики»;
+- публичный каталог в этом этапе не меняется.
+
+## Stage 23c — Public filters integration
+Status: COMPLETED
+
+- CatalogCategoryPage: получать filter definitions через GET /api/public/product-attributes?categorySlug=;
+- динамический filter UI (checkbox list / collapsible list в зависимости от количества значений), без hardcoded фильтров;
+- состояние фильтров в URL query params (комма-разделённые значения на ключ), поддержка back/forward/reload/share URL;
+- передача фильтров в существующий GET /api/public/products без изменения backend;
+- количество найденных товаров, loading skeleton, empty/error state, «Очистить фильтры», плавное обновление без перезагрузки;
+- responsive: sidebar (desktop) / кнопка «Фильтры» → drawer → «Применить» (mobile/tablet);
+- accessibility: label/fieldset/keyboard/focus-visible/aria-expanded/aria-controls;
+- не ломать language switch, SEO, breadcrumbs, product cards, анимации.
+
+## Stage 23d — Premium catalog category-page redesign
+Status: COMPLETED
+
+- category hero (существующее изображение категории/fallback, eyebrow, название, описание);
+- product grid: 3/2/1 колонки, стабильный aspect-ratio, hover, без hardcoded technical keys;
+- визуальная полировка FilterPanel/FilterDrawer (иерархия, sticky, active count, кнопка очистки) без изменения логики Stage 23c;
+- loading skeleton по геометрии карточек, empty state с кнопкой очистки фильтров, error state с retry;
+- сдержанные анимации (entrance reveal, hover scale, stagger, смена результатов) с prefers-reduced-motion;
+- responsive QA: 1440/1024/768/430/375;
+- backend, API contracts, URL filter semantics, admin frontend, auth, translations architecture не меняются.
+
+## Stage 23e — Product detail redesign & catalog QA
+Status: COMPLETED
+
+- public product detail редизайн (gallery, attributes table, related products);
+- route transition анимация;
+- frontend tests (URL params, reset, empty state, mobile filter UI);
+- data repair тестовых переводов ("Stone (test v2)", "Elevators v2").
+
+## Stage 23f — Public site visual polish pass
+Status: SUPERSEDED — merged into Stage 24 (раздел 2, по решению пользователя)
+
+Только визуальная полировка публичного сайта, без изменения логики:
+- типографика;
+- отступы и композиция;
+- микроанимации кнопок и карточек;
+- hover-эффекты;
+- улучшение карточек товаров;
+- плавные переходы между состояниями;
+- цвета, тени, контраст;
+- hero-блоки;
+- единый визуальный язык всего сайта.
+
+Не менять: backend, API, бизнес-логику, маршрутизацию, систему (аналогично ограничениям Stage 23d).
+
+## Stage 24 — Production Readiness, Final Polish & Release Audit
+Status: COMPLETED
+
+Цель: довести проект до уровня коммерческого production-ready продукта. Новые крупные функции не добавляются.
+
+1. **Languages** — поддерживаемые языки: ru, tg, en, fa (полный отказ от zh). Проверка Category/Product/Portfolio/Hero/Site Content/SEO/Gallery/Product Attributes; удаление test/v2/demo/placeholder/временных строк; fallback ru → без 500 и пустых строк.
+2. **Public UI Polish** (поглощает Stage 23f) — Home/Category/Product Detail/Portfolio/Contact/404: spacing, typography, hierarchy, hover, buttons, cards, forms, hero, breadcrumbs, transitions, mobile spacing, focus states, shadows, colors. Без изменения архитектуры/бренда/responsive.
+3. **Final UX Audit** — сценарий Главная→Каталог→Фильтр→Товар→Назад→Другая категория→Портфолио→Контакты; back/forward/reload/deep links/share URL; loading/error/empty/skeleton.
+4. **Accessibility** — keyboard, tab order, focus-visible, aria, labels, contrast, screen reader basics, prefers-reduced-motion.
+5. **SEO** — title, meta description, canonical, OpenGraph, Twitter, robots, sitemap, structured data, favicon, lang, hreflang.
+6. **Performance** — CLS, LCP, lazy loading, image sizes, cache, bundle, лишние re-render.
+7. **Production Audit** — console.error/warn/log, React warnings, TS/ESLint ошибки, битые ссылки/изображения, localhost URL, тестовые данные, TODO/FIXME/DEBUG.
+8. **Security** — admin routes, JWT, refresh, cookies, CORS, headers, утечка информации в ошибках.
+9. **Browser QA** — Chrome/Safari/Firefox × Desktop/Tablet/Mobile.
+10. **Deployment Readiness** — Railway, Netlify, production env, API URL, CORS, build, migration, seed.
+
+Не менять: backend-архитектуру, API, database schema (без критической необходимости). Не commit/push.

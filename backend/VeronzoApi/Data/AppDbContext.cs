@@ -18,8 +18,15 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     public DbSet<AdminUser> AdminUsers => Set<AdminUser>();
     public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
 
+    public DbSet<ProductAttributeDefinition> ProductAttributeDefinitions => Set<ProductAttributeDefinition>();
+    public DbSet<ProductAttributeOption> ProductAttributeOptions => Set<ProductAttributeOption>();
+    public DbSet<ProductAttributeValue> ProductAttributeValues => Set<ProductAttributeValue>();
+    public DbSet<ProductImage> ProductImages => Set<ProductImage>();
+
     public DbSet<CategoryTranslation> CategoryTranslations => Set<CategoryTranslation>();
     public DbSet<ProductTranslation> ProductTranslations => Set<ProductTranslation>();
+    public DbSet<ProductAttributeDefinitionTranslation> ProductAttributeDefinitionTranslations => Set<ProductAttributeDefinitionTranslation>();
+    public DbSet<ProductAttributeOptionTranslation> ProductAttributeOptionTranslations => Set<ProductAttributeOptionTranslation>();
     public DbSet<PortfolioItemTranslation> PortfolioItemTranslations => Set<PortfolioItemTranslation>();
     public DbSet<GalleryItemTranslation> GalleryItemTranslations => Set<GalleryItemTranslation>();
     public DbSet<SiteContentTranslation> SiteContentTranslations => Set<SiteContentTranslation>();
@@ -46,6 +53,65 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
         // Explicit DB-level default so the migration adding this column defaults
         // existing rows to visible, not hidden.
         modelBuilder.Entity<HeroStat>().Property(h => h.IsVisible).HasDefaultValue(true);
+
+        // Attribute/filter system: Key/Value are stable slugs used as public filter
+        // query-param keys/values, unique within their parent (category / definition).
+        // Option/Value reference-data relations use Restrict, not Cascade, so deleting
+        // a definition/option with data still attached fails at the DB level too --
+        // defense-in-depth behind the app-level 409 guards in the admin endpoints.
+        modelBuilder.Entity<ProductAttributeDefinition>(e =>
+        {
+            e.Property(d => d.Key).IsRequired().HasMaxLength(100);
+            e.Property(d => d.Name).IsRequired().HasMaxLength(200);
+            e.HasIndex(d => new { d.CategoryId, d.Key }).IsUnique();
+        });
+
+        modelBuilder.Entity<ProductAttributeOption>(e =>
+        {
+            e.Property(o => o.Value).IsRequired().HasMaxLength(100);
+            e.Property(o => o.Label).IsRequired().HasMaxLength(200);
+            e.HasIndex(o => new { o.DefinitionId, o.Value }).IsUnique();
+            e.HasOne(o => o.Definition).WithMany(d => d.Options)
+                .HasForeignKey(o => o.DefinitionId).OnDelete(DeleteBehavior.Restrict);
+        });
+
+        modelBuilder.Entity<ProductAttributeValue>(e =>
+        {
+            e.Property(v => v.TextValue).HasMaxLength(500);
+            e.HasIndex(v => new { v.ProductId, v.DefinitionId }).IsUnique();
+            e.HasOne(v => v.Product).WithMany(p => p.AttributeValues)
+                .HasForeignKey(v => v.ProductId).OnDelete(DeleteBehavior.Cascade);
+            e.HasOne(v => v.Definition).WithMany(d => d.Values)
+                .HasForeignKey(v => v.DefinitionId).OnDelete(DeleteBehavior.Restrict);
+            e.HasOne(v => v.Option).WithMany()
+                .HasForeignKey(v => v.OptionId).OnDelete(DeleteBehavior.Restrict);
+        });
+
+        modelBuilder.Entity<ProductImage>(e =>
+        {
+            e.Property(i => i.ImageUrl).IsRequired().HasMaxLength(500);
+            e.HasIndex(i => new { i.ProductId, i.ImageUrl }).IsUnique();
+            e.HasOne(i => i.Product).WithMany(p => p.Images)
+                .HasForeignKey(i => i.ProductId).OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<ProductAttributeDefinitionTranslation>(e =>
+        {
+            e.Property(t => t.LanguageCode).IsRequired().HasMaxLength(5);
+            e.Property(t => t.Name).IsRequired().HasMaxLength(200);
+            e.HasIndex(t => new { t.ProductAttributeDefinitionId, t.LanguageCode }).IsUnique();
+            e.HasOne(t => t.ProductAttributeDefinition).WithMany(d => d.Translations)
+                .HasForeignKey(t => t.ProductAttributeDefinitionId).OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<ProductAttributeOptionTranslation>(e =>
+        {
+            e.Property(t => t.LanguageCode).IsRequired().HasMaxLength(5);
+            e.Property(t => t.Label).IsRequired().HasMaxLength(200);
+            e.HasIndex(t => new { t.ProductAttributeOptionId, t.LanguageCode }).IsUnique();
+            e.HasOne(t => t.ProductAttributeOption).WithMany(o => o.Translations)
+                .HasForeignKey(t => t.ProductAttributeOptionId).OnDelete(DeleteBehavior.Cascade);
+        });
 
         // Translation tables: each is unique on (parent FK, LanguageCode) so a given
         // language can never be duplicated for the same parent row, and each cascades

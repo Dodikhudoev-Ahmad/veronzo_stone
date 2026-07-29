@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Link } from 'react-router-dom';
@@ -8,13 +8,16 @@ import { ImagePreview } from '../../components/ui/ImagePreview';
 import { ErrorState } from '../../components/ui/ErrorState';
 import { productSchema, type ProductFormValues } from './productSchema';
 import { useCategoryOptions } from './useCategoryOptions';
+import { AttributeFields } from './AttributeFields';
+import type { AttributeSelection } from './attributeSelection';
+import { useProductAttributeValues } from '../../hooks/useProductAttributeValues';
 import type { CategoryResponse, ProductResponse } from '../../api/types';
 
 interface ProductFormDialogProps {
   open: boolean;
   product: ProductResponse | null; // null = create mode, otherwise edit mode
   busy: boolean;
-  onSubmit: (values: ProductFormValues) => void;
+  onSubmit: (values: ProductFormValues, attributeSelections: AttributeSelection[]) => void;
   onClose: () => void;
 }
 
@@ -62,14 +65,59 @@ export function ProductFormDialog({ open, product, busy, onSubmit, onClose }: Pr
     defaultValues: defaultValuesFor(product, categories[0]?.id ?? 0),
   });
 
+  // Pending ProductAttributeValue selections for the currently selected
+  // category — a separate backend resource from Product itself (Stage 23a),
+  // reconciled into real rows by ProductsPage only after the product save
+  // succeeds (see useSyncProductAttributeValues.ts).
+  const [attributeSelections, setAttributeSelections] = useState<AttributeSelection[]>([]);
+
+  // Only fetched in edit mode — a new product can't have attribute values yet.
+  const existingValuesQuery = useProductAttributeValues(
+    product ? { productId: product.id, pageSize: 100 } : {},
+    { enabled: product !== null },
+  );
+
+  // Tracks what the form's categoryId was the last time it was deliberately
+  // set (by opening the dialog, or by a confirmed category change) — read
+  // synchronously inside the <select>'s own onChange below, not via a watch
+  // effect, so there's no risk of racing react-hook-form's own reset/update commits.
+  const currentCategoryIdRef = useRef(defaultValuesFor(product, categories[0]?.id ?? 0).categoryId);
+
   useEffect(() => {
     if (open) {
-      reset(defaultValuesFor(product, categoriesRef.current[0]?.id ?? 0));
+      const seeded = defaultValuesFor(product, categoriesRef.current[0]?.id ?? 0);
+      reset(seeded);
+      currentCategoryIdRef.current = seeded.categoryId;
+      // Existing values are seeded by the effect below once they've loaded;
+      // a brand-new product simply starts with none.
+      if (!product) {
+        setAttributeSelections([]);
+      }
     }
   }, [open, product, reset]);
 
+  useEffect(() => {
+    if (open && product && existingValuesQuery.data) {
+      setAttributeSelections(
+        existingValuesQuery.data.items.map((row) => ({
+          definitionId: row.definitionId,
+          optionId: row.optionId,
+          textValue: row.textValue,
+        })),
+      );
+    }
+    // Re-seeds whenever the loaded rows for this product change (e.g. first
+    // load) — mirrors TranslationLanguageForm's own reset-on-data-change effect.
+  }, [open, product, existingValuesQuery.data]);
+
   const imageUrl = watch('imageUrl');
+  const categoryId = watch('categoryId');
   const title = product ? 'Изменить товар' : 'Новый товар';
+
+  // Destructured (rather than spread directly onto the <select>) so the
+  // category-change confirm below can run its own logic first and decide
+  // whether to call react-hook-form's onChange at all.
+  const { onChange: categoryFieldOnChange, ...categoryFieldRest } = register('categoryId', { valueAsNumber: true });
 
   return (
     <Modal open={open} onClose={onClose} title={title}>
@@ -90,7 +138,11 @@ export function ProductFormDialog({ open, product, busy, onSubmit, onClose }: Pr
           </Link>
         </div>
       ) : (
-        <form onSubmit={(event) => void handleSubmit(onSubmit)(event)} className="flex flex-col gap-4" noValidate>
+        <form
+          onSubmit={(event) => void handleSubmit((values) => onSubmit(values, attributeSelections))(event)}
+          className="flex flex-col gap-4"
+          noValidate
+        >
           <FormField label="Название" htmlFor="product-title" error={errors.title?.message}>
             <input
               id="product-title"
@@ -105,7 +157,26 @@ export function ProductFormDialog({ open, product, busy, onSubmit, onClose }: Pr
               id="product-category"
               className="w-full rounded-md border border-cream-soft bg-white px-3 py-2 text-sm text-text focus:border-accent focus:outline-none"
               aria-invalid={errors.categoryId ? 'true' : undefined}
-              {...register('categoryId', { valueAsNumber: true })}
+              {...categoryFieldRest}
+              onChange={(event) => {
+                const next = Number(event.target.value);
+                const previous = currentCategoryIdRef.current;
+                if (next !== previous && attributeSelections.length > 0) {
+                  const confirmed = window.confirm(
+                    'При смене категории текущие значения характеристик будут сброшены. Продолжить?',
+                  );
+                  if (!confirmed) {
+                    // Revert the DOM selection — react-hook-form's own state
+                    // is never touched below, since categoryFieldOnChange
+                    // isn't called in this branch.
+                    event.target.value = String(previous);
+                    return;
+                  }
+                  setAttributeSelections([]);
+                }
+                currentCategoryIdRef.current = next;
+                void categoryFieldOnChange(event);
+              }}
             >
               {categories.map((category) => (
                 <option key={category.id} value={category.id}>
@@ -114,6 +185,8 @@ export function ProductFormDialog({ open, product, busy, onSubmit, onClose }: Pr
               ))}
             </select>
           </FormField>
+
+          <AttributeFields categoryId={categoryId} selections={attributeSelections} onChange={setAttributeSelections} />
 
           <FormField label="Описание" htmlFor="product-description" error={errors.description?.message}>
             <textarea

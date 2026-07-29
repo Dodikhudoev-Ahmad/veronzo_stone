@@ -165,6 +165,44 @@ internal static class AdminTranslationSync
         }
     }
 
+    public static async Task SyncProductAttributeDefinitionAsync(
+        AppDbContext db, ProductAttributeDefinition definition, bool isNew, CancellationToken cancellationToken)
+    {
+        if (!isNew)
+        {
+            await db.Entry(definition).Collection(d => d.Translations).LoadAsync(cancellationToken);
+        }
+
+        var translation = isNew ? null : definition.Translations.FirstOrDefault(t => t.LanguageCode == SupportedLanguages.Default);
+        if (translation is null)
+        {
+            definition.Translations.Add(new ProductAttributeDefinitionTranslation { LanguageCode = SupportedLanguages.Default, Name = definition.Name });
+        }
+        else
+        {
+            translation.Name = definition.Name;
+        }
+    }
+
+    public static async Task SyncProductAttributeOptionAsync(
+        AppDbContext db, ProductAttributeOption option, bool isNew, CancellationToken cancellationToken)
+    {
+        if (!isNew)
+        {
+            await db.Entry(option).Collection(o => o.Translations).LoadAsync(cancellationToken);
+        }
+
+        var translation = isNew ? null : option.Translations.FirstOrDefault(t => t.LanguageCode == SupportedLanguages.Default);
+        if (translation is null)
+        {
+            option.Translations.Add(new ProductAttributeOptionTranslation { LanguageCode = SupportedLanguages.Default, Label = option.Label });
+        }
+        else
+        {
+            translation.Label = option.Label;
+        }
+    }
+
     public static async Task SyncContactInfoAsync(AppDbContext db, ContactInfo contact, bool isNew, CancellationToken cancellationToken)
     {
         if (!isNew)

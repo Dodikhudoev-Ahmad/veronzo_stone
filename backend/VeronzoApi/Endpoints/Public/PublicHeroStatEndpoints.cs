@@ -13,7 +13,7 @@ public static class PublicHeroStatEndpoints
             .WithSummary("List visible hero stats")
             .WithDescription(
                 "Public, unauthenticated. Only IsVisible=true stats, ordered by SortOrder then Id. " +
-                "Optional ?lang= (ru/tg/en/zh, default ru), else falls back to the Accept-Language header, " +
+                "Optional ?lang= (ru/tg/en/fa, default ru), else falls back to the Accept-Language header, " +
                 "with ru-then-legacy-field fallback for Label. Value/Suffix are numeric/symbolic and never " +
                 "vary by language.")
             .Produces<PublicHeroStatResponse[]>(StatusCodes.Status200OK)

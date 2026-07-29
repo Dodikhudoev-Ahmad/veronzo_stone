@@ -1,0 +1,10 @@
+# Vite content-hashes everything under /assets (e.g. index-Ab12Cd34.js) — safe
+# to cache forever, a new deploy always ships new filenames. index.html itself
+# (and the SPA fallback in _redirects) must stay revalidated on every request
+# so a deploy is picked up immediately instead of serving a stale shell.
+/assets/*
+  Cache-Control: public, max-age=31536000, immutable
+
+/*
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin

@@ -1,11 +1,19 @@
 import { useQuery } from '@tanstack/react-query';
 import { contentLookup, publicApi } from '../api';
+import { useLanguage } from '../useLanguage';
 
 // Shares react-query's cache with the homepage/contacts-info queries (same
 // queryKey), so visiting a catalog page doesn't refetch data already loaded.
 export function SiteFooter() {
-  const contactInfo = useQuery({ queryKey: ['public', 'contact-info'], queryFn: publicApi.contactInfo });
-  const siteContent = useQuery({ queryKey: ['public', 'site-content'], queryFn: publicApi.siteContent });
+  const { language } = useLanguage();
+  const contactInfo = useQuery({
+    queryKey: ['public', 'contact-info', language],
+    queryFn: () => publicApi.contactInfo(language),
+  });
+  const siteContent = useQuery({
+    queryKey: ['public', 'site-content', language],
+    queryFn: () => publicApi.siteContent(language),
+  });
   const t = contentLookup(siteContent.data);
 
   const phone = contactInfo.data?.find((c) => c.label === 'Телефон')?.value;

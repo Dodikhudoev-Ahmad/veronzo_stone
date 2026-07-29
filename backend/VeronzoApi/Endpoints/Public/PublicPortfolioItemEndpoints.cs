@@ -13,7 +13,7 @@ public static class PublicPortfolioItemEndpoints
             .WithSummary("List visible portfolio items")
             .WithDescription(
                 "Public, unauthenticated. Only IsVisible=true items, ordered by SortOrder then Id. " +
-                "Optional ?lang= (ru/tg/en/zh, default ru), else falls back to the Accept-Language header, " +
+                "Optional ?lang= (ru/tg/en/fa, default ru), else falls back to the Accept-Language header, " +
                 "with ru-then-legacy-field fallback.")
             .Produces<PublicPortfolioItemResponse[]>(StatusCodes.Status200OK)
             .CacheOutput("PublicContent");

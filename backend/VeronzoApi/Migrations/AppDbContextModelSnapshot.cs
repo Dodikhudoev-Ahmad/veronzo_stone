@@ -409,6 +409,185 @@ namespace VeronzoApi.Migrations
                     b.ToTable("Products");
                 });
 
+            modelBuilder.Entity("VeronzoApi.Models.ProductAttributeDefinition", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("CategoryId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("IsFilterable")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("IsVisible")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Key")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("SortOrder")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CategoryId", "Key")
+                        .IsUnique();
+
+                    b.ToTable("ProductAttributeDefinitions");
+                });
+
+            modelBuilder.Entity("VeronzoApi.Models.ProductAttributeDefinitionTranslation", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("LanguageCode")
+                        .IsRequired()
+                        .HasMaxLength(5)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("ProductAttributeDefinitionId")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ProductAttributeDefinitionId", "LanguageCode")
+                        .IsUnique();
+
+                    b.ToTable("ProductAttributeDefinitionTranslations");
+                });
+
+            modelBuilder.Entity("VeronzoApi.Models.ProductAttributeOption", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("DefinitionId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("IsVisible")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Label")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("SortOrder")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Value")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("DefinitionId", "Value")
+                        .IsUnique();
+
+                    b.ToTable("ProductAttributeOptions");
+                });
+
+            modelBuilder.Entity("VeronzoApi.Models.ProductAttributeOptionTranslation", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Label")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("LanguageCode")
+                        .IsRequired()
+                        .HasMaxLength(5)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("ProductAttributeOptionId")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ProductAttributeOptionId", "LanguageCode")
+                        .IsUnique();
+
+                    b.ToTable("ProductAttributeOptionTranslations");
+                });
+
+            modelBuilder.Entity("VeronzoApi.Models.ProductAttributeValue", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("DefinitionId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int?>("OptionId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("ProductId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("TextValue")
+                        .HasMaxLength(500)
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("DefinitionId");
+
+                    b.HasIndex("OptionId");
+
+                    b.HasIndex("ProductId", "DefinitionId")
+                        .IsUnique();
+
+                    b.ToTable("ProductAttributeValues");
+                });
+
+            modelBuilder.Entity("VeronzoApi.Models.ProductImage", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("ImageUrl")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("ProductId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("SortOrder")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ProductId", "ImageUrl")
+                        .IsUnique();
+
+                    b.ToTable("ProductImages");
+                });
+
             modelBuilder.Entity("VeronzoApi.Models.ProductTranslation", b =>
                 {
                     b.Property<int>("Id")
@@ -684,6 +863,76 @@ namespace VeronzoApi.Migrations
                     b.Navigation("Category");
                 });
 
+            modelBuilder.Entity("VeronzoApi.Models.ProductAttributeDefinitionTranslation", b =>
+                {
+                    b.HasOne("VeronzoApi.Models.ProductAttributeDefinition", "ProductAttributeDefinition")
+                        .WithMany("Translations")
+                        .HasForeignKey("ProductAttributeDefinitionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("ProductAttributeDefinition");
+                });
+
+            modelBuilder.Entity("VeronzoApi.Models.ProductAttributeOption", b =>
+                {
+                    b.HasOne("VeronzoApi.Models.ProductAttributeDefinition", "Definition")
+                        .WithMany("Options")
+                        .HasForeignKey("DefinitionId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Definition");
+                });
+
+            modelBuilder.Entity("VeronzoApi.Models.ProductAttributeOptionTranslation", b =>
+                {
+                    b.HasOne("VeronzoApi.Models.ProductAttributeOption", "ProductAttributeOption")
+                        .WithMany("Translations")
+                        .HasForeignKey("ProductAttributeOptionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("ProductAttributeOption");
+                });
+
+            modelBuilder.Entity("VeronzoApi.Models.ProductAttributeValue", b =>
+                {
+                    b.HasOne("VeronzoApi.Models.ProductAttributeDefinition", "Definition")
+                        .WithMany("Values")
+                        .HasForeignKey("DefinitionId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("VeronzoApi.Models.ProductAttributeOption", "Option")
+                        .WithMany()
+                        .HasForeignKey("OptionId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("VeronzoApi.Models.Product", "Product")
+                        .WithMany("AttributeValues")
+                        .HasForeignKey("ProductId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Definition");
+
+                    b.Navigation("Option");
+
+                    b.Navigation("Product");
+                });
+
+            modelBuilder.Entity("VeronzoApi.Models.ProductImage", b =>
+                {
+                    b.HasOne("VeronzoApi.Models.Product", "Product")
+                        .WithMany("Images")
+                        .HasForeignKey("ProductId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Product");
+                });
+
             modelBuilder.Entity("VeronzoApi.Models.ProductTranslation", b =>
                 {
                     b.HasOne("VeronzoApi.Models.Product", "Product")
@@ -754,6 +1003,24 @@ namespace VeronzoApi.Migrations
                 });
 
             modelBuilder.Entity("VeronzoApi.Models.Product", b =>
+                {
+                    b.Navigation("AttributeValues");
+
+                    b.Navigation("Images");
+
+                    b.Navigation("Translations");
+                });
+
+            modelBuilder.Entity("VeronzoApi.Models.ProductAttributeDefinition", b =>
+                {
+                    b.Navigation("Options");
+
+                    b.Navigation("Translations");
+
+                    b.Navigation("Values");
+                });
+
+            modelBuilder.Entity("VeronzoApi.Models.ProductAttributeOption", b =>
                 {
                     b.Navigation("Translations");
                 });

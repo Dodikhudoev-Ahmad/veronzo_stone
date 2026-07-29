@@ -5,7 +5,7 @@ export const SUPPORTED_LANGUAGES = [
   { code: 'ru', tabLabel: 'RU', name: 'Русский' },
   { code: 'tg', tabLabel: 'TJ', name: 'Тоҷикӣ' },
   { code: 'en', tabLabel: 'EN', name: 'English' },
-  { code: 'zh', tabLabel: '中文', name: '中文' },
+  { code: 'fa', tabLabel: 'FA', name: 'فارسی' },
 ] as const;
 
 export type LanguageCode = (typeof SUPPORTED_LANGUAGES)[number]['code'];

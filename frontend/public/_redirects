@@ -1,0 +1,6 @@
+# Netlify serves this as a static site — without this rule, a direct visit or
+# reload on any client-routed path (e.g. /catalog/stone/1, /admin/products)
+# 404s at the CDN level before React Router ever gets a chance to run.
+# Falls through to index.html with a 200 so the SPA can take over routing,
+# including its own NotFoundPage for genuinely unknown paths.
+/*  /index.html  200

@@ -13,7 +13,7 @@ public static class PublicCategoryEndpoints
             .WithSummary("List visible categories")
             .WithDescription(
                 "Public, unauthenticated. Only IsVisible=true categories, ordered by SortOrder then Id. " +
-                "Optional ?lang= (ru/tg/en/zh, default ru), else falls back to the Accept-Language header; " +
+                "Optional ?lang= (ru/tg/en/fa, default ru), else falls back to the Accept-Language header; " +
                 "an unknown/missing value falls back to ru, and a category with no translation for the " +
                 "requested language falls back to its ru translation, then to its legacy Name field.")
             .Produces<PublicCategoryResponse[]>(StatusCodes.Status200OK)

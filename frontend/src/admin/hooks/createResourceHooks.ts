@@ -16,7 +16,7 @@ export function createResourceHooks<TResponse, TRequest>(resourcePath: string, q
     detail: (id: number) => [queryKeyRoot, 'detail', id] as const,
   };
 
-  function useList(params: ListParams = {}) {
+  function useList(params: ListParams = {}, options: { enabled?: boolean } = {}) {
     return useQuery({
       queryKey: keys.list(params),
       queryFn: async () => {
@@ -26,6 +26,11 @@ export function createResourceHooks<TResponse, TRequest>(resourcePath: string, q
       // Keeps the previous page's rows on screen while the next page/search/sort
       // is in flight, instead of flashing the loading skeleton on every change.
       placeholderData: keepPreviousData,
+      // Omitted/undefined behaves exactly as before (react-query defaults to
+      // enabled) -- lets a caller gate the fetch on some precondition (e.g.
+      // ProductFormDialog only loading a product's existing attribute values
+      // once a product actually exists) without every other caller changing.
+      enabled: options.enabled,
     });
   }
 

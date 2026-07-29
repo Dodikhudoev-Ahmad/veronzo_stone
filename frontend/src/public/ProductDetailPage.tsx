@@ -1,29 +1,49 @@
+import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import { AxiosError } from 'axios';
 import { Link, useParams } from 'react-router-dom';
 import { publicApi } from './api';
 import { SiteFooter } from './layout/SiteFooter';
 import { SiteHeader } from './layout/SiteHeader';
+import { PublicImage, resolveImageBase } from './PublicImage';
+import { ProductCard } from './ProductCard';
 import { useLanguage } from './useLanguage';
-import { useCanonical, useDocumentTitle, useJsonLd } from './seo';
+import { useCanonical, useDocumentTitle, useJsonLd, useOpenGraph, useRobotsNoIndex } from './seo';
 
-// No single-product public endpoint exists (Stage 17 only lists by
-// category), so the detail page reuses the category list query — react-query
-// caches it under the same key CatalogCategoryPage uses, so arriving here
-// via a product card is instant.
 export function ProductDetailPage() {
   const { categorySlug, productId } = useParams<{ categorySlug: string; productId: string }>();
   const { language, setLanguage } = useLanguage();
+  const numericId = Number(productId);
+  const [activeImageIndex, setActiveImageIndex] = useState(0);
 
-  const products = useQuery({
-    queryKey: ['public', 'products', categorySlug, language],
-    queryFn: () => publicApi.products(categorySlug!, language),
-    enabled: !!categorySlug,
+  const productQuery = useQuery({
+    queryKey: ['public', 'product-detail', numericId, language],
+    queryFn: () => publicApi.productDetail(numericId, language),
+    enabled: Number.isFinite(numericId),
   });
 
-  const product = products.data?.find((p) => p.id === Number(productId));
+  const product = productQuery.data;
+  const notFound = productQuery.isError && productQuery.error instanceof AxiosError && productQuery.error.response?.status === 404;
+  useRobotsNoIndex(notFound);
+
+  const relatedQuery = useQuery({
+    queryKey: ['public', 'products', product?.categorySlug, language],
+    queryFn: () => publicApi.products(product!.categorySlug, language),
+    enabled: !!product,
+  });
+  const relatedProducts = (relatedQuery.data ?? []).filter((p) => p.id !== product?.id).slice(0, 4);
 
   useDocumentTitle(product ? `${product.title} — Veronzo` : undefined);
   useCanonical(`/catalog/${categorySlug}/${productId}`);
+  useOpenGraph(
+    product
+      ? {
+          title: `${product.title} — Veronzo`,
+          description: product.description,
+          image: product.images[0] ? `${resolveImageBase(product.images[0].imageUrl)}.webp` : undefined,
+        }
+      : undefined,
+  );
   useJsonLd(
     'product-jsonld',
     product
@@ -32,47 +52,98 @@ export function ProductDetailPage() {
           '@type': 'Product',
           name: product.title,
           description: product.description ?? undefined,
-          image: product.imageUrl ? new URL(product.imageUrl, window.location.origin).toString() : undefined,
+          image: product.images[0]
+            ? new URL(`${resolveImageBase(product.images[0].imageUrl)}.webp`, window.location.origin).toString()
+            : undefined,
         }
       : null,
   );
 
+  const activeImage = product?.images[activeImageIndex] ?? product?.images[0];
+
   return (
     <>
       <SiteHeader language={language} onLanguageChange={setLanguage} />
-      <main className="catalog-page wrap">
+      <main className="catalog-page wrap page-enter">
         <nav className="breadcrumb" aria-label="Хлебные крошки">
           <Link to="/">Главная</Link> <span aria-hidden="true">→</span>{' '}
           <Link to={`/catalog/${categorySlug}`}>Каталог</Link>
           {product && <> <span aria-hidden="true">→</span> <span>{product.title}</span></>}
         </nav>
 
-        {products.isLoading && <p className="state-message">Загрузка…</p>}
+        {productQuery.isLoading && <p className="state-message">Загрузка…</p>}
 
-        {products.isError && (
-          <p className="state-message state-message-error">
-            Не удалось загрузить товар. Попробуйте обновить страницу.
-          </p>
+        {productQuery.isError && !notFound && (
+          <div className="state-message state-message-error">
+            <p>Не удалось загрузить товар. Проверьте соединение и попробуйте ещё раз.</p>
+            <button type="button" className="btn-ghost state-retry" onClick={() => void productQuery.refetch()}>
+              Повторить попытку
+            </button>
+          </div>
         )}
 
-        {products.isSuccess && !product && (
-          <p className="state-message">Товар не найден. Возможно, он был снят с публикации.</p>
-        )}
+        {notFound && <p className="state-message">Товар не найден. Возможно, он был снят с публикации.</p>}
 
         {product && (
-          <div className="product-detail">
-            {product.imageUrl && (
-              <div className="product-detail-image">
-                <img src={product.imageUrl} alt={product.title} decoding="async" />
+          <>
+            <div className="product-detail">
+              {product.images.length > 0 && (
+                <div className="product-detail-gallery">
+                  <div className="product-detail-image">
+                    <PublicImage src={activeImage?.imageUrl} alt={product.title} />
+                  </div>
+                  {product.images.length > 1 && (
+                    <div className="product-detail-thumbs" role="tablist" aria-label="Изображения товара">
+                      {product.images.map((image, index) => (
+                        <button
+                          key={image.imageUrl}
+                          type="button"
+                          role="tab"
+                          aria-selected={index === activeImageIndex}
+                          aria-label={`Изображение ${index + 1}`}
+                          className={`product-detail-thumb ${index === activeImageIndex ? 'is-active' : ''}`}
+                          onClick={() => setActiveImageIndex(index)}
+                        >
+                          <PublicImage src={image.imageUrl} alt="" />
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+              <div className="product-detail-body">
+                {product.badgeText && <span className="product-card-badge">{product.badgeText}</span>}
+                <h1 className="product-detail-title">{product.title}</h1>
+                {product.description && <p>{product.description}</p>}
+
+                {product.attributes.length > 0 && (
+                  <table className="product-detail-attributes">
+                    <tbody>
+                      {product.attributes.map((attribute) => (
+                        <tr key={attribute.key}>
+                          <th scope="row">{attribute.name}</th>
+                          <td>{attribute.value}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                )}
+
+                <a href="/#contacts" className="btn btn-primary">Заявка на консультацию</a>
               </div>
-            )}
-            <div className="product-detail-body">
-              {product.badgeText && <span className="product-card-badge">{product.badgeText}</span>}
-              <h1>{product.title}</h1>
-              {product.description && <p>{product.description}</p>}
-              <a href="/#contacts" className="btn btn-primary">Заявка на консультацию</a>
             </div>
-          </div>
+
+            {relatedProducts.length > 0 && (
+              <section className="related-products">
+                <h2>Похожие товары</h2>
+                <div className="product-grid">
+                  {relatedProducts.map((related, index) => (
+                    <ProductCard key={related.id} product={related} categorySlug={categorySlug ?? ''} index={index} />
+                  ))}
+                </div>
+              </section>
+            )}
+          </>
         )}
       </main>
       <SiteFooter />

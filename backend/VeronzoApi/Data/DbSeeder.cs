@@ -134,10 +134,185 @@ public static class DbSeeder
             "assets/images/hero-calacatta.webp");
     }
 
+    private readonly record struct AttributeOptionSeed(string Value, string Label);
+    private readonly record struct AttributeDefinitionSeed(string Key, string Name, AttributeOptionSeed[] Options);
+
+    // Idempotent per-category filter definitions for the premium catalog (Stage 23a).
+    // Looked up by (CategoryId, Key) / (DefinitionId, Value) business key, same as
+    // every other Seed*Async in this file — safe to call on every startup.
+    public static async Task SeedProductAttributesAsync(AppDbContext db)
+    {
+        var stone = await db.Categories.FirstOrDefaultAsync(c => c.Slug == "stone");
+        if (stone is not null)
+        {
+            await SeedCategoryAttributesAsync(db, stone.Id,
+            [
+                new("stone_type", "Тип камня",
+                [
+                    new("marble", "Мрамор"), new("granite", "Гранит"), new("onyx", "Оникс"),
+                    new("travertine", "Травертин"), new("quartz", "Кварц")
+                ]),
+                new("color", "Цвет",
+                [
+                    new("white", "Белый"), new("black", "Чёрный"), new("gray", "Серый"),
+                    new("beige", "Бежевый"), new("green", "Зелёный"), new("brown", "Коричневый")
+                ]),
+                new("finish", "Обработка",
+                [
+                    new("polished", "Полированный"), new("matte", "Матовый"), new("brushed", "Брашированный")
+                ]),
+                new("purpose", "Назначение",
+                [
+                    new("floor", "Пол"), new("wall", "Стены"), new("facade", "Фасад"),
+                    new("countertop", "Столешница"), new("bathroom", "Санузел")
+                ])
+            ]);
+        }
+
+        var doors = await db.Categories.FirstOrDefaultAsync(c => c.Slug == "doors");
+        if (doors is not null)
+        {
+            await SeedCategoryAttributesAsync(db, doors.Id,
+            [
+                new("door_type", "Тип двери",
+                [
+                    new("hidden", "Скрытая"), new("hinged", "Распашная"),
+                    new("sliding", "Раздвижная"), new("entrance", "Входная")
+                ]),
+                new("material", "Материал",
+                [
+                    new("veneer", "Шпон"), new("solid_wood", "Массив"),
+                    new("glass", "Стекло"), new("metal", "Металл")
+                ]),
+                new("finish", "Отделка",
+                [
+                    new("matte", "Матовая"), new("glossy", "Глянцевая"), new("textured", "Текстурная")
+                ]),
+                new("purpose", "Назначение",
+                [
+                    new("apartment", "Квартира"), new("house", "Дом"),
+                    new("office", "Офис"), new("hotel", "Отель")
+                ])
+            ]);
+        }
+
+        var lifts = await db.Categories.FirstOrDefaultAsync(c => c.Slug == "lifts");
+        if (lifts is not null)
+        {
+            await SeedCategoryAttributesAsync(db, lifts.Id,
+            [
+                new("lift_type", "Тип лифта",
+                [
+                    new("passenger", "Пассажирский"), new("panoramic", "Панорамный"),
+                    new("home", "Домашний"), new("freight", "Грузовой")
+                ]),
+                new("capacity", "Вместимость",
+                [
+                    new("2_4", "2–4"), new("5_8", "5–8"), new("9_plus", "9+")
+                ]),
+                new("cabin_finish", "Отделка кабины",
+                [
+                    new("stone", "Камень"), new("metal", "Металл"),
+                    new("glass", "Стекло"), new("wood", "Дерево")
+                ]),
+                new("purpose", "Назначение",
+                [
+                    new("residential", "Жилой"), new("commercial", "Коммерческий"),
+                    new("hotel", "Отель"), new("private_house", "Частный дом")
+                ])
+            ]);
+        }
+
+        var windows = await db.Categories.FirstOrDefaultAsync(c => c.Slug == "windows");
+        if (windows is not null)
+        {
+            await SeedCategoryAttributesAsync(db, windows.Id,
+            [
+                new("system_type", "Тип системы",
+                [
+                    new("panoramic", "Панорамная"), new("sliding", "Раздвижная"),
+                    new("tilt_turn", "Поворотно-откидная"), new("facade", "Фасадная")
+                ]),
+                new("profile_material", "Материал профиля",
+                [
+                    new("aluminum", "Алюминий"), new("pvc", "ПВХ"), new("wood", "Дерево")
+                ]),
+                new("color", "Цвет",
+                [
+                    new("black", "Чёрный"), new("white", "Белый"),
+                    new("gray", "Серый"), new("brown", "Коричневый")
+                ]),
+                new("glazing", "Остекление",
+                [
+                    new("double", "Двойной"), new("triple", "Тройной"),
+                    new("energy_saving", "Энергосберегающий"), new("tempered", "Закалённый")
+                ])
+            ]);
+        }
+    }
+
+    private static async Task SeedCategoryAttributesAsync(AppDbContext db, int categoryId, AttributeDefinitionSeed[] definitions)
+    {
+        var sortOrder = 1;
+        foreach (var def in definitions)
+        {
+            var definition = await SeedProductAttributeDefinitionAsync(
+                db, categoryId, def.Key, def.Name, sortOrder++, isFilterable: true, isVisible: true);
+
+            var optionSortOrder = 1;
+            foreach (var option in def.Options)
+            {
+                await SeedProductAttributeOptionAsync(db, definition.Id, option.Value, option.Label, optionSortOrder++);
+            }
+        }
+    }
+
+    private static async Task<ProductAttributeDefinition> SeedProductAttributeDefinitionAsync(
+        AppDbContext db, int categoryId, string key, string name, int sortOrder, bool isFilterable, bool isVisible)
+    {
+        var existing = await db.ProductAttributeDefinitions.FirstOrDefaultAsync(d => d.CategoryId == categoryId && d.Key == key);
+        if (existing is not null)
+        {
+            return existing;
+        }
+
+        var definition = new ProductAttributeDefinition
+        {
+            CategoryId = categoryId,
+            Key = key,
+            Name = name,
+            SortOrder = sortOrder,
+            IsFilterable = isFilterable,
+            IsVisible = isVisible
+        };
+        db.ProductAttributeDefinitions.Add(definition);
+        await db.SaveChangesAsync();
+        return definition;
+    }
+
+    private static async Task SeedProductAttributeOptionAsync(AppDbContext db, int definitionId, string value, string label, int sortOrder)
+    {
+        var exists = await db.ProductAttributeOptions.AnyAsync(o => o.DefinitionId == definitionId && o.Value == value);
+        if (exists)
+        {
+            return;
+        }
+
+        db.ProductAttributeOptions.Add(new ProductAttributeOption
+        {
+            DefinitionId = definitionId,
+            Value = value,
+            Label = label,
+            SortOrder = sortOrder,
+            IsVisible = true
+        });
+        await db.SaveChangesAsync();
+    }
+
     // Existing content is authored in Russian, so every row that doesn't yet have a
     // "ru" translation gets one created from its current field values. Never touches
     // a "ru" translation that already exists (an admin may have edited it since), and
-    // never invents tg/en/zh content. Safe to call on every startup: each backfill
+    // never invents tg/en/fa content. Safe to call on every startup: each backfill
     // does a single existence query per entity type, then inserts only what's
     // missing — no network calls, no data loss, idempotent on repeated runs.
     public static async Task SeedRussianTranslationsAsync(AppDbContext db)
@@ -150,6 +325,8 @@ public static class DbSeeder
         await BackfillHeroStatTranslationsAsync(db);
         await BackfillSeoMetaTranslationsAsync(db);
         await BackfillContactInfoTranslationsAsync(db);
+        await BackfillProductAttributeDefinitionTranslationsAsync(db);
+        await BackfillProductAttributeOptionTranslationsAsync(db);
     }
 
     private static async Task BackfillCategoryTranslationsAsync(AppDbContext db)
@@ -332,6 +509,50 @@ public static class DbSeeder
                 ContactInfoId = contact.Id,
                 LanguageCode = SupportedLanguages.Default,
                 Label = contact.Label
+            });
+        }
+        await db.SaveChangesAsync();
+    }
+
+    private static async Task BackfillProductAttributeDefinitionTranslationsAsync(AppDbContext db)
+    {
+        var translatedIds = await db.ProductAttributeDefinitionTranslations
+            .Where(t => t.LanguageCode == SupportedLanguages.Default)
+            .Select(t => t.ProductAttributeDefinitionId)
+            .ToListAsync();
+
+        var missing = await db.ProductAttributeDefinitions.Where(d => !translatedIds.Contains(d.Id)).ToListAsync();
+        if (missing.Count == 0) return;
+
+        foreach (var definition in missing)
+        {
+            db.ProductAttributeDefinitionTranslations.Add(new ProductAttributeDefinitionTranslation
+            {
+                ProductAttributeDefinitionId = definition.Id,
+                LanguageCode = SupportedLanguages.Default,
+                Name = definition.Name
+            });
+        }
+        await db.SaveChangesAsync();
+    }
+
+    private static async Task BackfillProductAttributeOptionTranslationsAsync(AppDbContext db)
+    {
+        var translatedIds = await db.ProductAttributeOptionTranslations
+            .Where(t => t.LanguageCode == SupportedLanguages.Default)
+            .Select(t => t.ProductAttributeOptionId)
+            .ToListAsync();
+
+        var missing = await db.ProductAttributeOptions.Where(o => !translatedIds.Contains(o.Id)).ToListAsync();
+        if (missing.Count == 0) return;
+
+        foreach (var option in missing)
+        {
+            db.ProductAttributeOptionTranslations.Add(new ProductAttributeOptionTranslation
+            {
+                ProductAttributeOptionId = option.Id,
+                LanguageCode = SupportedLanguages.Default,
+                Label = option.Label
             });
         }
         await db.SaveChangesAsync();

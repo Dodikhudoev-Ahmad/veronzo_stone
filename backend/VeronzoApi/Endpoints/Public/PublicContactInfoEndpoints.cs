@@ -14,7 +14,7 @@ public static class PublicContactInfoEndpoints
             .WithDescription(
                 "Public, unauthenticated. ContactInfo has no IsVisible flag — every entry (showroom, " +
                 "phone, email) is public by design, so all rows are returned, ordered by SortOrder then Id. " +
-                "Optional ?lang= (ru/tg/en/zh, default ru), else falls back to the Accept-Language header, " +
+                "Optional ?lang= (ru/tg/en/fa, default ru), else falls back to the Accept-Language header, " +
                 "with ru-then-legacy-field fallback for Label only — Value holds phone/email/address text " +
                 "and is never translated.")
             .Produces<PublicContactInfoResponse[]>(StatusCodes.Status200OK)

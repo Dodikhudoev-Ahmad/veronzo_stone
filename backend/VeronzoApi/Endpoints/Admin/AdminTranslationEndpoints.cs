@@ -17,7 +17,8 @@ public static class AdminTranslationEndpoints
     private static readonly string[] ValidEntities =
     [
         "categories", "products", "portfolio-items", "gallery-items",
-        "site-content", "hero-stats", "seo-meta", "contact-info"
+        "site-content", "hero-stats", "seo-meta", "contact-info",
+        "product-attribute-definitions", "product-attribute-options"
     ];
 
     public static void MapAdminTranslationEndpoints(this WebApplication app)
@@ -107,6 +108,8 @@ public static class AdminTranslationEndpoints
         "hero-stats" => ["Label"],
         "seo-meta" => ["Title", "Description", "Keywords", "OgTitle", "OgDescription"],
         "contact-info" => ["Label"],
+        "product-attribute-definitions" => ["Name"],
+        "product-attribute-options" => ["Label"],
         _ => []
     };
 
@@ -120,6 +123,8 @@ public static class AdminTranslationEndpoints
         "hero-stats" => db.HeroStats.AnyAsync(x => x.Id == id, ct),
         "seo-meta" => db.SeoMetas.AnyAsync(x => x.Id == id, ct),
         "contact-info" => db.ContactInfos.AnyAsync(x => x.Id == id, ct),
+        "product-attribute-definitions" => db.ProductAttributeDefinitions.AnyAsync(x => x.Id == id, ct),
+        "product-attribute-options" => db.ProductAttributeOptions.AnyAsync(x => x.Id == id, ct),
         _ => Task.FromResult(false)
     };
 
@@ -179,6 +184,18 @@ public static class AdminTranslationEndpoints
             case "contact-info":
             {
                 var rows = await db.ContactInfoTranslations.AsNoTracking().Where(t => t.ContactInfoId == id)
+                    .Select(t => new { t.LanguageCode, t.Label }).ToArrayAsync(ct);
+                return rows.Select(t => new TranslationResponse(t.LanguageCode, new Dictionary<string, string?> { ["Label"] = t.Label })).ToArray();
+            }
+            case "product-attribute-definitions":
+            {
+                var rows = await db.ProductAttributeDefinitionTranslations.AsNoTracking().Where(t => t.ProductAttributeDefinitionId == id)
+                    .Select(t => new { t.LanguageCode, t.Name }).ToArrayAsync(ct);
+                return rows.Select(t => new TranslationResponse(t.LanguageCode, new Dictionary<string, string?> { ["Name"] = t.Name })).ToArray();
+            }
+            case "product-attribute-options":
+            {
+                var rows = await db.ProductAttributeOptionTranslations.AsNoTracking().Where(t => t.ProductAttributeOptionId == id)
                     .Select(t => new { t.LanguageCode, t.Label }).ToArrayAsync(ct);
                 return rows.Select(t => new TranslationResponse(t.LanguageCode, new Dictionary<string, string?> { ["Label"] = t.Label })).ToArray();
             }
@@ -259,6 +276,20 @@ public static class AdminTranslationEndpoints
             {
                 var t = await db.ContactInfoTranslations.FirstOrDefaultAsync(x => x.ContactInfoId == id && x.LanguageCode == languageCode, ct);
                 if (t is null) { t = new ContactInfoTranslation { ContactInfoId = id, LanguageCode = languageCode }; db.ContactInfoTranslations.Add(t); }
+                if (fields.TryGetValue("Label", out var label) && label is not null) t.Label = label;
+                return new TranslationResponse(languageCode, new Dictionary<string, string?> { ["Label"] = t.Label });
+            }
+            case "product-attribute-definitions":
+            {
+                var t = await db.ProductAttributeDefinitionTranslations.FirstOrDefaultAsync(x => x.ProductAttributeDefinitionId == id && x.LanguageCode == languageCode, ct);
+                if (t is null) { t = new ProductAttributeDefinitionTranslation { ProductAttributeDefinitionId = id, LanguageCode = languageCode }; db.ProductAttributeDefinitionTranslations.Add(t); }
+                if (fields.TryGetValue("Name", out var name) && name is not null) t.Name = name;
+                return new TranslationResponse(languageCode, new Dictionary<string, string?> { ["Name"] = t.Name });
+            }
+            case "product-attribute-options":
+            {
+                var t = await db.ProductAttributeOptionTranslations.FirstOrDefaultAsync(x => x.ProductAttributeOptionId == id && x.LanguageCode == languageCode, ct);
+                if (t is null) { t = new ProductAttributeOptionTranslation { ProductAttributeOptionId = id, LanguageCode = languageCode }; db.ProductAttributeOptionTranslations.Add(t); }
                 if (fields.TryGetValue("Label", out var label) && label is not null) t.Label = label;
                 return new TranslationResponse(languageCode, new Dictionary<string, string?> { ["Label"] = t.Label });
             }

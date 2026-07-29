@@ -21,8 +21,8 @@ interface TranslationEditorModalProps {
 // get real admin pages (see final report — those pages are still placeholders).
 export function TranslationEditorModal({ open, onClose, entity, id, entityTitle, fields }: TranslationEditorModalProps) {
   const [activeLang, setActiveLang] = useState<LanguageCode>('ru');
-  const dirtyRef = useRef<Record<LanguageCode, boolean>>({ ru: false, tg: false, en: false, zh: false });
-  const tabRefs = useRef<Record<LanguageCode, HTMLButtonElement | null>>({ ru: null, tg: null, en: null, zh: null });
+  const dirtyRef = useRef<Record<LanguageCode, boolean>>({ ru: false, tg: false, en: false, fa: false });
+  const tabRefs = useRef<Record<LanguageCode, HTMLButtonElement | null>>({ ru: null, tg: null, en: null, fa: null });
 
   const query = useTranslations(entity, id ?? undefined, open);
   const translations = query.data;
@@ -43,7 +43,7 @@ export function TranslationEditorModal({ open, onClose, entity, id, entityTitle,
   // setActiveLang above.
   useEffect(() => {
     if (open) {
-      dirtyRef.current = { ru: false, tg: false, en: false, zh: false };
+      dirtyRef.current = { ru: false, tg: false, en: false, fa: false };
     }
   }, [open]);
 

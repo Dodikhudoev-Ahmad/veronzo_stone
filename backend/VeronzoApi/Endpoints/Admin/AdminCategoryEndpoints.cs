@@ -169,6 +169,11 @@ public static class AdminCategoryEndpoints
             return Results.Conflict(new ApiErrorResponse("Cannot delete a category that still has products"));
         }
 
+        if (await db.ProductAttributeDefinitions.AnyAsync(d => d.CategoryId == id, cancellationToken))
+        {
+            return Results.Conflict(new ApiErrorResponse("Cannot delete a category that still has attribute definitions"));
+        }
+
         db.Categories.Remove(category);
 
         var conflict = await AdminEndpointHelpers.TrySaveChangesAsync(db, cancellationToken);

@@ -1,34 +1,25 @@
-import { useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import { contentLookup, publicApi, type PublicContactInfo, type PublicSocialLink } from './api';
 import { CATALOG_CARD_COPY, SOCIAL_ICON_LABEL } from './catalogContent';
 import { ContactForm } from './ContactForm';
-import { useJsFlag, useReveal } from './hooks';
+import { useJsFlag } from './hooks';
 import { SiteFooter } from './layout/SiteFooter';
 import { SiteHeader } from './layout/SiteHeader';
+import { PublicImage } from './PublicImage';
+import { Reveal } from './Reveal';
 import { useLanguage } from './useLanguage';
-import { useCanonical, useJsonLd } from './seo';
+import { useCanonical, useDocumentTitle, useJsonLd, useOpenGraph } from './seo';
 
-function useSeoMeta() {
-  const { data } = useQuery({ queryKey: ['public', 'seo-meta', 'home'], queryFn: () => publicApi.seoMeta('home') });
+function useSeoMeta(language: string) {
+  const { data } = useQuery({
+    queryKey: ['public', 'seo-meta', 'home', language],
+    queryFn: () => publicApi.seoMeta('home', language),
+  });
 
   useCanonical('/');
-
-  useEffect(() => {
-    if (!data) return;
-    document.title = data.title;
-    const setMeta = (selector: string, content: string) => {
-      const el = document.head.querySelector<HTMLMetaElement>(selector);
-      if (el) el.content = content;
-    };
-    if (data.description) {
-      setMeta('meta[name="description"]', data.description);
-      setMeta('meta[property="og:description"]', data.description);
-    }
-    setMeta('meta[property="og:title"]', data.title);
-    if (data.ogImageUrl) setMeta('meta[property="og:image"]', data.ogImageUrl);
-  }, [data]);
+  useDocumentTitle(data?.title);
+  useOpenGraph(data ? { title: data.title, description: data.description, image: data.ogImageUrl } : undefined);
 }
 
 function useOrganizationJsonLd(contactInfo: PublicContactInfo[] | undefined, socialLinks: PublicSocialLink[] | undefined) {
@@ -47,28 +38,32 @@ function useOrganizationJsonLd(contactInfo: PublicContactInfo[] | undefined, soc
   useJsonLd('org-jsonld', jsonLd);
 }
 
-// Renders a <div> regardless of the original markup's element (article/div) —
-// styles.css targets these purely by class, never by tag, so this doesn't
-// change appearance, only slightly reduces semantics vs. the original <article>.
-function Reveal({ className, children }: { className?: string; children: React.ReactNode }) {
-  const ref = useReveal<HTMLDivElement>();
-  return <div ref={ref} className={className}>{children}</div>;
-}
-
 export function PublicHomePage() {
   useJsFlag();
-  useSeoMeta();
   const { language, setLanguage } = useLanguage();
+  useSeoMeta(language);
 
   const categories = useQuery({
     queryKey: ['public', 'categories', language],
     queryFn: () => publicApi.categories(language),
   });
-  const heroStats = useQuery({ queryKey: ['public', 'hero-stats'], queryFn: publicApi.heroStats });
-  const portfolio = useQuery({ queryKey: ['public', 'portfolio'], queryFn: publicApi.portfolioItems });
+  const heroStats = useQuery({
+    queryKey: ['public', 'hero-stats', language],
+    queryFn: () => publicApi.heroStats(language),
+  });
+  const portfolio = useQuery({
+    queryKey: ['public', 'portfolio', language],
+    queryFn: () => publicApi.portfolioItems(language),
+  });
   const socialLinks = useQuery({ queryKey: ['public', 'social-links'], queryFn: publicApi.socialLinks });
-  const contactInfo = useQuery({ queryKey: ['public', 'contact-info'], queryFn: publicApi.contactInfo });
-  const siteContent = useQuery({ queryKey: ['public', 'site-content'], queryFn: publicApi.siteContent });
+  const contactInfo = useQuery({
+    queryKey: ['public', 'contact-info', language],
+    queryFn: () => publicApi.contactInfo(language),
+  });
+  const siteContent = useQuery({
+    queryKey: ['public', 'site-content', language],
+    queryFn: () => publicApi.siteContent(language),
+  });
   const t = contentLookup(siteContent.data);
   useOrganizationJsonLd(contactInfo.data, socialLinks.data);
 
@@ -126,6 +121,18 @@ export function PublicHomePage() {
                 {t('catalog.sectionNote', 'Четыре направления, единый стандарт качества — от подбора материала до монтажа на объекте.')}
               </div>
             </div>
+
+            {categories.isLoading && <p className="state-message">Загрузка…</p>}
+
+            {categories.isError && (
+              <p className="state-message state-message-error">
+                Не удалось загрузить каталог. Попробуйте обновить страницу или свяжитесь с нами напрямую.
+              </p>
+            )}
+
+            {categories.isSuccess && categories.data.filter((c) => CATALOG_CARD_COPY[c.slug]).length === 0 && (
+              <p className="state-message">Каталог временно недоступен.</p>
+            )}
 
             <div className="cat3" role="tabpanel">
               {(categories.data ?? [])
@@ -199,22 +206,31 @@ export function PublicHomePage() {
           <div className="wrap">
             <div className="eyebrow-label">Портфолио</div>
             <h2 className="portfolio-title">Объекты, которыми мы гордимся</h2>
+
+            {portfolio.isLoading && <p className="state-message">Загрузка…</p>}
+
+            {portfolio.isError && (
+              <p className="state-message state-message-error">
+                Не удалось загрузить портфолио. Попробуйте обновить страницу или свяжитесь с нами напрямую.
+              </p>
+            )}
+
+            {portfolio.isSuccess && portfolio.data.length === 0 && (
+              <p className="state-message">Портфолио скоро пополнится новыми объектами.</p>
+            )}
+
             <div className="pf">
               {(portfolio.data ?? []).map((item) => (
                 <Reveal
                   className={item.isFeatured ? 'pf-card pf-card-lg' : 'pf-card'}
                   key={item.id}
                 >
-                  {item.imageUrl && (
-                    <img
-                      src={item.imageUrl}
-                      alt={item.title}
-                      width={item.isFeatured ? 1200 : 800}
-                      height={item.isFeatured ? 799 : 600}
-                      loading="lazy"
-                      decoding="async"
-                    />
-                  )}
+                  <PublicImage
+                    src={item.imageUrl}
+                    alt={item.title}
+                    width={item.isFeatured ? 1200 : 800}
+                    height={item.isFeatured ? 799 : 600}
+                  />
                   <div className="pf-scrim" />
                   {item.isFeatured && item.categoryTag && <div className="pf-tag">{item.categoryTag}</div>}
                   <div className={item.isFeatured ? 'pf-body' : 'pf-body pf-body-sm'}>

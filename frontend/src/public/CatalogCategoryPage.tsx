@@ -1,30 +1,58 @@
 import { useMemo, useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { Link, Navigate, useParams } from 'react-router-dom';
-import { publicApi } from './api';
+import { keepPreviousData, useQuery } from '@tanstack/react-query';
+import { Link, useParams } from 'react-router-dom';
+import { publicApi, type CatalogFilterState } from './api';
 import { SiteFooter } from './layout/SiteFooter';
 import { SiteHeader } from './layout/SiteHeader';
+import { CategoryHero } from './CategoryHero';
+import { CATALOG_CARD_COPY } from './catalogContent';
+import { NotFoundPage } from './NotFoundPage';
+import { ProductCard } from './ProductCard';
+import { FilterPanel } from './FilterPanel';
+import { FilterDrawer, FILTER_DRAWER_ID } from './FilterDrawer';
+import { useCatalogFilters } from './useCatalogFilters';
 import { useLanguage } from './useLanguage';
-import { useCanonical, useDocumentTitle } from './seo';
+import { useCanonical, useDocumentTitle, useOpenGraph } from './seo';
 
 export function CatalogCategoryPage() {
   const { categorySlug } = useParams<{ categorySlug: string }>();
   const { language, setLanguage } = useLanguage();
   const [search, setSearch] = useState('');
+  const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
+  const [stagedFilters, setStagedFilters] = useState<CatalogFilterState>({});
 
   const categories = useQuery({
     queryKey: ['public', 'categories', language],
     queryFn: () => publicApi.categories(language),
   });
-  const products = useQuery({
-    queryKey: ['public', 'products', categorySlug, language],
-    queryFn: () => publicApi.products(categorySlug!, language),
+
+  const attributeDefs = useQuery({
+    queryKey: ['public', 'product-attributes', categorySlug, language],
+    queryFn: () => publicApi.productAttributes(categorySlug!, language),
     enabled: !!categorySlug,
   });
 
+  const { filters, rawFilters, activeCount, toggleValue, applyFilters, clearFilters } =
+    useCatalogFilters(attributeDefs.data);
+
+  const products = useQuery({
+    queryKey: ['public', 'products', categorySlug, language, rawFilters],
+    queryFn: () => publicApi.products(categorySlug!, language, rawFilters),
+    enabled: !!categorySlug,
+    // Keeps the previous grid on screen while a filter change is in flight —
+    // only the very first load for a category shows the full skeleton.
+    placeholderData: keepPreviousData,
+  });
+
   const category = categories.data?.find((c) => c.slug === categorySlug);
+  const cardCopy = categorySlug ? CATALOG_CARD_COPY[categorySlug] : undefined;
   useDocumentTitle(category ? `${category.name} — Veronzo` : undefined);
   useCanonical(`/catalog/${categorySlug}`);
+  useOpenGraph(
+    category
+      ? { title: `${category.name} — Veronzo`, description: cardCopy?.description, image: cardCopy ? `${cardCopy.imageBase}.webp` : undefined }
+      : undefined,
+  );
 
   const filteredProducts = useMemo(() => {
     const items = products.data ?? [];
@@ -32,63 +60,177 @@ export function CatalogCategoryPage() {
     return query ? items.filter((p) => p.title.toLowerCase().includes(query)) : items;
   }, [products.data, search]);
 
+  const visibleDefinitions = useMemo(
+    () => (attributeDefs.data ?? []).filter((d) => d.options.length > 0),
+    [attributeDefs.data],
+  );
+
+  const hasActiveQuery = search.trim() !== '' || activeCount > 0;
+
+  function openMobileFilters() {
+    setStagedFilters(filters);
+    setMobileFiltersOpen(true);
+  }
+
+  function applyMobileFilters() {
+    applyFilters(stagedFilters);
+    setMobileFiltersOpen(false);
+  }
+
+  function toggleStaged(key: string, value: string) {
+    setStagedFilters((prev) => {
+      const current = prev[key] ?? [];
+      const updated = current.includes(value) ? current.filter((v) => v !== value) : [...current, value];
+      const next = { ...prev };
+      if (updated.length > 0) {
+        next[key] = updated;
+      } else {
+        delete next[key];
+      }
+      return next;
+    });
+  }
+
+  function clearEverything() {
+    setSearch('');
+    clearFilters();
+  }
+
+  const stagedActiveCount = useMemo(
+    () => Object.values(stagedFilters).reduce((sum, values) => sum + values.length, 0),
+    [stagedFilters],
+  );
+
   // categories.data loaded and the slug isn't among them — a genuinely
   // unknown category, not just "still loading".
   if (categories.data && !category) {
-    return <Navigate to="/" replace />;
+    return <NotFoundPage />;
   }
+
+  const isInitialLoading = products.isLoading;
+  const isUpdating = products.isFetching && !isInitialLoading;
 
   return (
     <>
       <SiteHeader language={language} onLanguageChange={setLanguage} />
-      <main className="catalog-page wrap">
+      <main className="catalog-page wrap page-enter">
         <nav className="breadcrumb" aria-label="Хлебные крошки">
           <Link to="/">Главная</Link> <span aria-hidden="true">→</span> <Link to="/#catalog">Каталог</Link>
           {category && <> <span aria-hidden="true">→</span> <span>{category.name}</span></>}
         </nav>
 
-        <div className="catalog-page-header">
-          <h1>{category?.name ?? '…'}</h1>
-          <input
-            type="search"
-            className="catalog-page-filter"
-            placeholder="Поиск по товарам…"
-            aria-label="Поиск по товарам"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-          />
+        <CategoryHero categorySlug={categorySlug ?? ''} categoryName={category?.name} />
+
+        <div className="catalog-toolbar">
+          <label className="catalog-page-search">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+              <circle cx="7" cy="7" r="5.25" stroke="currentColor" strokeWidth="1.4" />
+              <path d="M11 11l3.5 3.5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
+            </svg>
+            <input
+              type="search"
+              className="catalog-page-filter"
+              placeholder="Поиск по товарам…"
+              aria-label="Поиск по товарам"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+            />
+          </label>
+
+          <div className="catalog-toolbar-right">
+            {visibleDefinitions.length > 0 && (
+              <button
+                type="button"
+                className="catalog-filters-toggle"
+                aria-expanded={mobileFiltersOpen}
+                aria-controls={FILTER_DRAWER_ID}
+                onClick={openMobileFilters}
+              >
+                Фильтры{activeCount > 0 ? ` (${activeCount})` : ''}
+              </button>
+            )}
+            {!isInitialLoading && products.isSuccess && (
+              <span className="catalog-result-count" aria-live="polite">
+                {isUpdating ? 'Обновление…' : `Найдено: ${filteredProducts.length}`}
+              </span>
+            )}
+          </div>
         </div>
 
-        {products.isLoading && <p className="state-message">Загрузка…</p>}
+        <div className="catalog-layout">
+          {visibleDefinitions.length > 0 && (
+            <aside className="catalog-filters-sidebar">
+              <FilterPanel
+                idPrefix="sidebar"
+                definitions={visibleDefinitions}
+                selected={filters}
+                onToggle={toggleValue}
+                onClear={clearFilters}
+                activeCount={activeCount}
+              />
+            </aside>
+          )}
 
-        {products.isError && (
-          <p className="state-message state-message-error">
-            Не удалось загрузить товары. Попробуйте обновить страницу или свяжитесь с нами напрямую.
-          </p>
-        )}
+          <div className="catalog-main">
+            {isInitialLoading && <CatalogSkeleton />}
 
-        {products.isSuccess && filteredProducts.length === 0 && (
-          <p className="state-message">
-            {search ? 'По вашему запросу ничего не найдено.' : 'В этой категории пока нет товаров.'}
-          </p>
-        )}
+            {products.isError && (
+              <div className="state-message state-message-error">
+                <p>Не удалось загрузить товары. Проверьте соединение и попробуйте ещё раз.</p>
+                <button type="button" className="btn-ghost state-retry" onClick={() => void products.refetch()}>
+                  Повторить попытку
+                </button>
+              </div>
+            )}
 
-        {products.isSuccess && filteredProducts.length > 0 && (
-          <div className="product-grid">
-            {filteredProducts.map((product) => (
-              <Link to={`/catalog/${categorySlug}/${product.id}`} className="product-card" key={product.id}>
-                {product.imageUrl && <img src={product.imageUrl} alt={product.title} loading="lazy" decoding="async" />}
-                <div className="product-card-body">
-                  {product.badgeText && <span className="product-card-badge">{product.badgeText}</span>}
-                  <h3>{product.title}</h3>
-                  {product.description && <p>{product.description}</p>}
-                </div>
-              </Link>
-            ))}
+            {!isInitialLoading && products.isSuccess && filteredProducts.length === 0 && (
+              <div className="state-message state-empty">
+                <p>{hasActiveQuery ? 'По заданным условиям ничего не найдено.' : 'В этой категории пока нет товаров.'}</p>
+                {hasActiveQuery && (
+                  <button type="button" className="btn-ghost state-retry" onClick={clearEverything}>
+                    Очистить фильтры
+                  </button>
+                )}
+              </div>
+            )}
+
+            {!isInitialLoading && products.isSuccess && filteredProducts.length > 0 && (
+              <div className={`product-grid ${isUpdating ? 'is-updating' : ''}`}>
+                {filteredProducts.map((product, index) => (
+                  <ProductCard key={product.id} product={product} categorySlug={categorySlug ?? ''} index={index} />
+                ))}
+              </div>
+            )}
           </div>
-        )}
+        </div>
       </main>
       <SiteFooter />
+
+      <FilterDrawer open={mobileFiltersOpen} onClose={() => setMobileFiltersOpen(false)} onApply={applyMobileFilters}>
+        <FilterPanel
+          idPrefix="drawer"
+          showTitle={false}
+          definitions={visibleDefinitions}
+          selected={stagedFilters}
+          onToggle={toggleStaged}
+          onClear={() => setStagedFilters({})}
+          activeCount={stagedActiveCount}
+        />
+      </FilterDrawer>
     </>
+  );
+}
+
+function CatalogSkeleton() {
+  return (
+    <div className="product-grid" aria-hidden="true">
+      {Array.from({ length: 6 }).map((_, index) => (
+        <div className="product-card-skeleton" key={index}>
+          <div className="product-card-skeleton-media" />
+          <div className="product-card-skeleton-line product-card-skeleton-line-title" />
+          <div className="product-card-skeleton-line" />
+        </div>
+      ))}
+    </div>
   );
 }
