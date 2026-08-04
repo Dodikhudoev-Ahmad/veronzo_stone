@@ -488,6 +488,42 @@ body.menu-open {
   animation-delay: .15s;
 }
 
+/* ---------- Hero: mobile tier ----------
+   .hero-section's own padding (46px sides) has higher specificity than the
+   generic `section` mobile rule, so it never got the same 12–20px side
+   padding every other section gets on phones — the hero column was ~90px
+   narrower than the rest of the page, which is why its title, copy,
+   buttons, stat figures, and photo all read as undersized. Matching the
+   other sections' mobile padding here fixes that at the source instead of
+   just inflating font sizes to compensate. */
+@media (max-width: 768px) {
+  .hero-section {
+    padding-left: 12px;
+    padding-right: 12px;
+  }
+
+  .hero-copy h1 {
+    font-size: clamp(60px, 15vw, 76px);
+    overflow-wrap: anywhere;
+  }
+
+  .lede {
+    font-size: 17px;
+  }
+
+  .hero-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .hero-actions .btn {
+    width: 100%;
+    text-align: center;
+    padding: 20px 28px;
+    font-size: 15.5px;
+  }
+}
+
 /* ---------- Section heading pattern ---------- */
 .section-head {
   display: flex;
@@ -662,7 +698,10 @@ body.menu-open {
    (higher specificity than the generic `section` mobile rule, so it never
    got overridden) was leaving cards at ~75% of viewport width. Cards now
    run near-full-bleed, sized independently of the grid track via an
-   explicit viewport-relative width rather than relying on the 1fr track. */
+   explicit width. Uses `calc(100% - ...)` (of the grid track), not
+   `100vw` — 100vw includes the scrollbar and ignores the track's own
+   padding, which is what was pushing cards off-center/past the right
+   edge whenever anything else on the page added horizontal scroll. */
 @media (max-width: 768px) {
   .catalog-section {
     padding-left: 12px;
@@ -674,18 +713,23 @@ body.menu-open {
   }
 
   .cat-card {
-    width: calc(100vw - 24px);
+    width: calc(100% - 24px);
     max-width: none;
     margin-inline: auto;
-    aspect-ratio: 0.88 / 1;
-    min-height: 310px;
+    aspect-ratio: 0.98 / 1;
+    min-height: 270px;
     border-radius: 28px;
+  }
+
+  .cat-card-body {
+    padding: 22px;
   }
 }
 
 @media (max-width: 360px) {
   .cat-card {
     border-radius: 24px;
+    min-height: 250px;
   }
 }
 
@@ -875,8 +919,10 @@ body.menu-open {
   }
 }
 
-/* Mobile: single column, near full-bleed cards — mirrors .cat-card's
-   viewport-relative width (not the grid track) for the same reason. */
+/* Mobile: single column, near full-bleed cards. Width is `calc(100% - ...)`
+   of the grid track (not `100vw`) — same fix as .cat-card, and for the same
+   reason: 100vw ignores the track's own padding and includes the scrollbar,
+   which is what was shifting these cards off-center toward the right edge. */
 @media (max-width: 768px) {
   .stones-grid {
     padding-top: 56px;
@@ -905,7 +951,7 @@ body.menu-open {
   }
 
   .stone-card-link {
-    width: calc(100vw - 24px);
+    width: calc(100% - 24px);
     max-width: none;
     margin-inline: auto;
     aspect-ratio: 0.88 / 1;
@@ -929,12 +975,33 @@ body.menu-open {
   .stone-card-body {
     left: 20px;
     right: 20px;
-    bottom: 20px;
+    bottom: 24px;
     padding-right: 56px;
   }
 
   .stone-card-body h3 {
     font-size: clamp(30px, 9vw, 34px);
+  }
+}
+
+/* ---------- Small-phone tier: one shared card width ----------
+   Direction cards, the hero property photo, and stone-type cards each had
+   their own width formula (and the vw-based ones drifted right of center
+   whenever the page had any horizontal scroll). Below 520px they now all
+   share one fixed, centered container so edges line up across sections. */
+@media (max-width: 520px) {
+  .cat-card,
+  .hero-image,
+  .stone-card-link {
+    width: calc(100% - 32px);
+    max-width: 360px;
+    margin-left: auto;
+    margin-right: auto;
+    box-sizing: border-box;
+  }
+
+  .hero-image {
+    border-radius: 26px;
   }
 }
 
@@ -1835,11 +1902,12 @@ body.menu-open {
 
 @media (max-width: 480px) {
   .hero-stats {
-    gap: 18px;
+    gap: 14px;
+    flex-wrap: wrap;
   }
 
   .stat-num {
-    font-size: clamp(30px, 10vw, 50px);
+    font-size: clamp(38px, 11vw, 54px);
   }
 }
 
