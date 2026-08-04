@@ -746,16 +746,18 @@ body.menu-open {
 
 /* ---------- Stones ---------- */
 /* Section itself stays transparent — it sits on the shared fixed marble
-   background (body:has(.site-header)::before), it doesn't paint its own. */
+   background (body:has(.site-header)::before), it doesn't paint its own.
+   Padding/container match .catalog-section + .wrap exactly (same
+   --container-max, same side padding) so this section reads as the same
+   width as the rest of the page instead of its own bespoke column. */
 .stones-section {
   background: transparent;
+  padding: 96px 46px;
 }
 
 .stones-grid {
-  max-width: 1440px;
+  max-width: var(--container-max);
   margin-inline: auto;
-  padding-inline: clamp(32px, 4vw, 56px);
-  padding-block: 100px;
   display: grid;
   grid-template-columns: minmax(360px, 0.78fr) minmax(620px, 1.22fr);
   gap: 72px;
@@ -882,7 +884,17 @@ body.menu-open {
   align-items: center;
   justify-content: center;
   font-size: 18px;
-  transition: transform var(--transition-base);
+  /* Hidden by default — revealed on hover/focus below. Touch devices (no
+     hover) get it always-on via the `(hover: none)` rule further down,
+     since there's no gesture there that would ever trigger :hover. */
+  opacity: 0;
+  transform: scale(0.82);
+  transition: opacity 300ms var(--ease-premium), transform 300ms var(--ease-premium);
+}
+
+.stone-card-link:focus-visible .stone-card-arrow {
+  opacity: 1;
+  transform: scale(1);
 }
 
 @media (hover: hover) and (pointer: fine) {
@@ -895,7 +907,44 @@ body.menu-open {
   }
 
   .stone-card-link:hover .stone-card-arrow {
-    transform: scale(1.08);
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@media (hover: none) {
+  .stone-card-arrow {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* Slow, subtle float — idle motion only; hover/focus takes over via the
+   transform transition above (translate/transform are independent
+   properties, so the two never fight for the same value). Delays are
+   applied per-card via :nth-child on the Reveal wrapper (.stone-card) so
+   the six cards don't move in lockstep. prefers-reduced-motion is handled
+   globally (top of this file forces animation-duration to ~0), so no
+   extra override is needed here. */
+@keyframes stoneFloat {
+  0%, 100% { translate: 0 0; }
+  50% { translate: 0 -8px; }
+}
+
+.stone-card-link {
+  animation: stoneFloat 6s ease-in-out infinite;
+}
+
+.stone-card:nth-child(1) .stone-card-link { animation-delay: 0s; }
+.stone-card:nth-child(2) .stone-card-link { animation-delay: .5s; }
+.stone-card:nth-child(3) .stone-card-link { animation-delay: 1s; }
+.stone-card:nth-child(4) .stone-card-link { animation-delay: 1.5s; }
+.stone-card:nth-child(5) .stone-card-link { animation-delay: 2s; }
+.stone-card:nth-child(6) .stone-card-link { animation-delay: 2.5s; }
+
+@media (hover: hover) and (pointer: fine) {
+  .stone-card-link:hover {
+    animation-play-state: paused;
   }
 }
 
@@ -903,7 +952,6 @@ body.menu-open {
 @media (max-width: 1023px) {
   .stones-grid {
     grid-template-columns: 1fr;
-    padding-inline: 24px;
     gap: 40px;
   }
 
@@ -930,20 +978,22 @@ body.menu-open {
   }
 }
 
-/* Mobile: single column, near full-bleed cards. Width is `calc(100% - ...)`
-   of the grid track (not `100vw`) — same fix as .cat-card, and for the same
-   reason: 100vw ignores the track's own padding and includes the scrollbar,
-   which is what was shifting these cards off-center toward the right edge. */
-@media (max-width: 768px) {
-  .stones-grid {
-    padding-top: 56px;
-    padding-bottom: 72px;
-    padding-inline: 12px;
-    gap: 36px;
+/* Mobile: single column, near full-bleed cards — same side padding as
+   .catalog-section at this breakpoint (12px), and the same reasoning for
+   the card width formula: `calc(100% - ...)` of the grid track, not
+   `100vw` (which includes the scrollbar and ignores the track's own
+   padding — that's what was shifting cards off-center toward the right
+   edge). Threshold is 767, not 768 — the tablet tier above (≤1023) is the
+   one that owns exactly 768px, so the "tablet: 2 columns" breakpoint
+   doesn't get silently overridden back to 1 column at its own boundary. */
+@media (max-width: 767px) {
+  .stones-section {
+    padding-left: 12px;
+    padding-right: 12px;
   }
 
-  .stones-info {
-    padding-inline: 4px;
+  .stones-grid {
+    gap: 36px;
   }
 
   .stones-info h2 {
@@ -2968,7 +3018,8 @@ body.menu-open {
   .catalog-section,
   .about-section,
   .portfolio-section,
-  .why-section {
+  .why-section,
+  .stones-section {
     padding-left: 0;
     padding-right: 0;
     padding-block: var(--mobile-section-padding-block);
@@ -2984,27 +3035,20 @@ body.menu-open {
   /* The shared container: each section's content wrapper gets identical
      width/centering. .contacts is deliberately excluded — it's a bordered
      panel with its own established mobile treatment, not a plain content
-     column, and wasn't reported as broken. */
+     column, and wasn't reported as broken. .stones-grid is also excluded —
+     it uses the same near-full-bleed `calc(100% - ...)` card-width pattern
+     as .cat-card instead of this capped-at-360 box (see the "Stones"
+     section rules above), so its cards read the same width as the rest of
+     the catalog instead of shrinking into their own narrow column. */
   .hero,
   .catalog-section > .wrap,
   .about,
   .portfolio-section > .wrap,
-  .why-section > .wrap,
-  .stones-grid {
+  .why-section > .wrap {
     width: var(--mobile-container-width);
     max-width: var(--mobile-container-max);
     margin-inline: auto;
     box-sizing: border-box;
-  }
-
-  .stones-grid {
-    padding-inline: 0;
-    padding-block: var(--mobile-section-padding-block);
-    gap: var(--mobile-text-gap);
-  }
-
-  .stones-info {
-    padding-inline: 0;
   }
 
   /* Vertical rhythm: heading → text → cards, and the gap between cards,
@@ -3030,11 +3074,11 @@ body.menu-open {
     gap: var(--mobile-card-gap);
   }
 
-  /* Direction cards ("Камень", "Двери", "Лифты", "Окна") and stone-type
-     cards: one fixed size, filling the shared container above instead of
-     each computing its own width. */
-  .cat-card,
-  .stone-card-link {
+  /* Direction cards ("Камень", "Двери", "Лифты", "Окна"): one fixed size,
+     filling the shared container above instead of computing its own width.
+     Stone-type cards keep their own `calc(100% - ...)` sizing from the
+     "Stones" section rules — see the container-list comment above. */
+  .cat-card {
     width: 100%;
     aspect-ratio: auto;
     height: 320px;
@@ -3044,12 +3088,6 @@ body.menu-open {
 
   .cat-card-body {
     padding: 20px;
-  }
-
-  .stone-card-body {
-    left: 20px;
-    right: 20px;
-    bottom: 20px;
   }
 
   .hero-image {
