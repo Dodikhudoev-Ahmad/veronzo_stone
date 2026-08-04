@@ -3,7 +3,6 @@ import { Link } from 'react-router-dom';
 import type { PublicProduct } from './api';
 import { PublicImage } from './PublicImage';
 import { Reveal } from './Reveal';
-import type { LanguageCode } from './useLanguage';
 import { useT } from './uiStrings';
 
 // Caps how far the entrance stagger goes so a very long result set doesn't
@@ -14,11 +13,6 @@ interface ProductCardProps {
   product: PublicProduct;
   categorySlug: string;
   index: number;
-  language: LanguageCode;
-  // True when this card matches a `?stone_type=` hint from the homepage
-  // stone cards (CatalogCategoryPage's title-based best-effort match) —
-  // purely a visual highlight, never affects which products load.
-  highlighted?: boolean;
 }
 
 // Shared by the catalog grid (CatalogCategoryPage) and the related-products
@@ -27,11 +21,11 @@ interface ProductCardProps {
 // inside it — the whole card is already one big <a>, and an <a>/<button>
 // inside another <a> is invalid HTML (and would make both targets fight
 // over the same click).
-export function ProductCard({ product, categorySlug, index, language, highlighted }: ProductCardProps) {
-  const ui = useT(language);
+export function ProductCard({ product, categorySlug, index }: ProductCardProps) {
+  const ui = useT();
   return (
     <Reveal
-      className={`product-card${highlighted ? ' product-card-highlighted' : ''}`}
+      className="product-card"
       style={{ '--reveal-index': index % MAX_STAGGER_INDEX } as CSSProperties}
     >
       <Link to={`/catalog/${categorySlug}/${product.id}`} className="product-card-link">

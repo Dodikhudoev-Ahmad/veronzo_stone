@@ -4,7 +4,14 @@ import axios from 'axios';
 // instance from the admin apiClient avoids sending credentials/auth headers
 // that these endpoints neither need nor check.
 const baseURL = import.meta.env.VITE_API_URL ?? 'http://localhost:5103';
-export const publicClient = axios.create({ baseURL, timeout: 8000 });
+export const publicClient = axios.create({ baseURL, timeout: 8000, headers: { 'Accept-Language': 'ru' } });
+
+// The public site is Russian-only (see useLanguage.ts's removal note in git
+// history) — every request asks the backend for `ru` explicitly rather than
+// relying on its default, so behavior doesn't silently change if that
+// default ever does. The backend's translation tables/schema are untouched;
+// this just always selects the `ru` row.
+const LANG = 'ru';
 
 export interface PublicCategory {
   id: number;
@@ -86,50 +93,23 @@ export interface PublicProductDetail {
   attributes: PublicProductDetailAttribute[];
 }
 
-export interface PublicAttributeFilterOption {
-  value: string;
-  label: string;
-}
-
-export interface PublicAttributeFilterDefinition {
-  key: string;
-  name: string;
-  options: PublicAttributeFilterOption[];
-}
-
-// Selected filter values keyed by definition Key — mirrors the shape
-// useCatalogFilters derives from the URL (see CatalogCategoryPage).
-export type CatalogFilterState = Record<string, string[]>;
-
 async function get<T>(path: string, params?: Record<string, string | undefined>): Promise<T> {
   const response = await publicClient.get<T>(path, { params });
   return response.data;
 }
 
 export const publicApi = {
-  categories: (lang?: string) => get<PublicCategory[]>('/api/public/categories', { lang }),
-  heroStats: (lang?: string) => get<PublicHeroStat[]>('/api/public/hero-stats', { lang }),
-  portfolioItems: (lang?: string) => get<PublicPortfolioItem[]>('/api/public/portfolio-items', { lang }),
+  categories: () => get<PublicCategory[]>('/api/public/categories', { lang: LANG }),
+  heroStats: () => get<PublicHeroStat[]>('/api/public/hero-stats', { lang: LANG }),
+  portfolioItems: () => get<PublicPortfolioItem[]>('/api/public/portfolio-items', { lang: LANG }),
   socialLinks: () => get<PublicSocialLink[]>('/api/public/social-links'),
-  contactInfo: (lang?: string) => get<PublicContactInfo[]>('/api/public/contact-info', { lang }),
-  siteContent: (lang?: string) => get<PublicSiteContentEntry[]>('/api/public/site-content', { lang }),
-  seoMeta: (pageKey: string, lang?: string) => get<PublicSeoMeta>(`/api/public/seo-meta/${pageKey}`, { lang }),
-  productAttributes: (categorySlug: string, lang?: string) =>
-    get<PublicAttributeFilterDefinition[]>('/api/public/product-attributes', { categorySlug, lang }),
-  // Filters are passed as repeated same-name query params (?stone_type=marble&stone_type=granite),
-  // matching the backend's whitelist-based OR-within-key/AND-across-keys contract (Stage 23a) —
-  // built via URLSearchParams directly rather than axios's own array serialization (which defaults
-  // to `key[]=`, not the repeated-key form the backend expects).
-  products: (categorySlug: string, lang: string | undefined, filters: CatalogFilterState = {}) => {
-    const params = new URLSearchParams();
-    params.set('categorySlug', categorySlug);
-    if (lang) params.set('lang', lang);
-    for (const [key, values] of Object.entries(filters)) {
-      for (const value of values) params.append(key, value);
-    }
-    return get<PublicProduct[]>(`/api/public/products?${params.toString()}`);
-  },
-  productDetail: (id: number, lang?: string) => get<PublicProductDetail>(`/api/public/products/${id}`, { lang }),
+  contactInfo: () => get<PublicContactInfo[]>('/api/public/contact-info', { lang: LANG }),
+  siteContent: () => get<PublicSiteContentEntry[]>('/api/public/site-content', { lang: LANG }),
+  seoMeta: (pageKey: string) => get<PublicSeoMeta>(`/api/public/seo-meta/${pageKey}`, { lang: LANG }),
+  // No filters — the catalog always shows every visible product in the
+  // category (see CatalogCategoryPage).
+  products: (categorySlug: string) => get<PublicProduct[]>('/api/public/products', { categorySlug, lang: LANG }),
+  productDetail: (id: number) => get<PublicProductDetail>(`/api/public/products/${id}`, { lang: LANG }),
 };
 
 // Turns [{key,value}] into a lookup with a fallback for keys the API hasn't

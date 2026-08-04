@@ -1,6 +1,5 @@
 import { useState, type FormEvent } from 'react';
 import { publicClient } from './api';
-import type { LanguageCode } from './useLanguage';
 import { useT, type UIStringKey } from './uiStrings';
 
 type Status = 'idle' | 'submitting' | 'success' | 'error';
@@ -18,12 +17,8 @@ const PRODUCT_TYPE_KEYS: UIStringKey[] = [
   'contact.type.complex',
 ];
 
-interface ContactFormProps {
-  language: LanguageCode;
-}
-
-export function ContactForm({ language }: ContactFormProps) {
-  const ui = useT(language);
+export function ContactForm() {
+  const ui = useT();
   const productTypes = PRODUCT_TYPE_KEYS.map((key) => ui(key));
 
   const [status, setStatus] = useState<Status>('idle');

@@ -1,34 +1,24 @@
 import { useQuery } from '@tanstack/react-query';
 import { contentLookup, publicApi } from '../api';
 import { findContactValue } from '../contactLabels';
-import type { LanguageCode } from '../useLanguage';
 import { useT } from '../uiStrings';
-
-interface SiteFooterProps {
-  language: LanguageCode;
-}
 
 // Shares react-query's cache with the homepage/contacts-info queries (same
 // queryKey), so visiting a catalog page doesn't refetch data already loaded.
-// `language` comes from the parent page (matching SiteHeader's own prop) --
-// calling useLanguage() independently here would give this component its own
-// localStorage-read-once copy that never re-renders when the header's
-// switcher changes it elsewhere (found via Stage 24 testing: the footer
-// silently stayed in whatever language was active on first mount).
-export function SiteFooter({ language }: SiteFooterProps) {
+export function SiteFooter() {
   const contactInfo = useQuery({
-    queryKey: ['public', 'contact-info', language],
-    queryFn: () => publicApi.contactInfo(language),
+    queryKey: ['public', 'contact-info'],
+    queryFn: publicApi.contactInfo,
   });
   const siteContent = useQuery({
-    queryKey: ['public', 'site-content', language],
-    queryFn: () => publicApi.siteContent(language),
+    queryKey: ['public', 'site-content'],
+    queryFn: publicApi.siteContent,
   });
   const t = contentLookup(siteContent.data);
-  const ui = useT(language);
+  const ui = useT();
 
-  const phone = findContactValue(contactInfo.data, 'phone', language);
-  const email = findContactValue(contactInfo.data, 'email', language);
+  const phone = findContactValue(contactInfo.data, 'phone');
+  const email = findContactValue(contactInfo.data, 'email');
 
   return (
     <footer className="site-footer">

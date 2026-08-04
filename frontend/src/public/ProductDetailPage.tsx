@@ -7,20 +7,18 @@ import { SiteFooter } from './layout/SiteFooter';
 import { SiteHeader } from './layout/SiteHeader';
 import { PublicImage, resolveImageBase } from './PublicImage';
 import { ProductCard } from './ProductCard';
-import { useLanguage } from './useLanguage';
 import { useCanonical, useDocumentTitle, useJsonLd, useOpenGraph, useRobotsNoIndex } from './seo';
 import { useT } from './uiStrings';
 
 export function ProductDetailPage() {
   const { categorySlug, productId } = useParams<{ categorySlug: string; productId: string }>();
-  const { language, setLanguage } = useLanguage();
-  const ui = useT(language);
+  const ui = useT();
   const numericId = Number(productId);
   const [activeImageIndex, setActiveImageIndex] = useState(0);
 
   const productQuery = useQuery({
-    queryKey: ['public', 'product-detail', numericId, language],
-    queryFn: () => publicApi.productDetail(numericId, language),
+    queryKey: ['public', 'product-detail', numericId],
+    queryFn: () => publicApi.productDetail(numericId),
     enabled: Number.isFinite(numericId),
   });
 
@@ -29,8 +27,8 @@ export function ProductDetailPage() {
   useRobotsNoIndex(notFound);
 
   const relatedQuery = useQuery({
-    queryKey: ['public', 'products', product?.categorySlug, language],
-    queryFn: () => publicApi.products(product!.categorySlug, language),
+    queryKey: ['public', 'products', product?.categorySlug],
+    queryFn: () => publicApi.products(product!.categorySlug),
     enabled: !!product,
   });
   const relatedProducts = (relatedQuery.data ?? []).filter((p) => p.id !== product?.id).slice(0, 4);
@@ -65,7 +63,7 @@ export function ProductDetailPage() {
 
   return (
     <>
-      <SiteHeader language={language} onLanguageChange={setLanguage} />
+      <SiteHeader />
       <main className="catalog-page wrap page-enter">
         <nav className="breadcrumb" aria-label={ui('breadcrumb.aria')}>
           <Link to="/">{ui('breadcrumb.home')}</Link> <span aria-hidden="true">→</span>{' '}
@@ -140,7 +138,7 @@ export function ProductDetailPage() {
                 <h2>{ui('product.related')}</h2>
                 <div className="product-grid">
                   {relatedProducts.map((related, index) => (
-                    <ProductCard key={related.id} product={related} categorySlug={categorySlug ?? ''} index={index} language={language} />
+                    <ProductCard key={related.id} product={related} categorySlug={categorySlug ?? ''} index={index} />
                   ))}
                 </div>
               </section>
@@ -148,7 +146,7 @@ export function ProductDetailPage() {
           </>
         )}
       </main>
-      <SiteFooter language={language} />
+      <SiteFooter />
     </>
   );
 }

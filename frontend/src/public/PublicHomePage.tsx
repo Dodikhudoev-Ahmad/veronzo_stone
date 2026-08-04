@@ -9,14 +9,13 @@ import { SiteFooter } from './layout/SiteFooter';
 import { SiteHeader } from './layout/SiteHeader';
 import { PublicImage } from './PublicImage';
 import { Reveal } from './Reveal';
-import { useLanguage, type LanguageCode } from './useLanguage';
 import { useCanonical, useDocumentTitle, useJsonLd, useOpenGraph } from './seo';
 import { useT } from './uiStrings';
 
-function useSeoMeta(language: string) {
+function useSeoMeta() {
   const { data } = useQuery({
-    queryKey: ['public', 'seo-meta', 'home', language],
-    queryFn: () => publicApi.seoMeta('home', language),
+    queryKey: ['public', 'seo-meta', 'home'],
+    queryFn: () => publicApi.seoMeta('home'),
   });
 
   useCanonical('/');
@@ -24,12 +23,8 @@ function useSeoMeta(language: string) {
   useOpenGraph(data ? { title: data.title, description: data.description, image: data.ogImageUrl } : undefined);
 }
 
-function useOrganizationJsonLd(
-  contactInfo: PublicContactInfo[] | undefined,
-  socialLinks: PublicSocialLink[] | undefined,
-  language: LanguageCode,
-) {
-  const phone = findContactValue(contactInfo, 'phone', language);
+function useOrganizationJsonLd(contactInfo: PublicContactInfo[] | undefined, socialLinks: PublicSocialLink[] | undefined) {
+  const phone = findContactValue(contactInfo, 'phone');
   const jsonLd = phone
     ? {
         '@context': 'https://schema.org',
@@ -47,37 +42,21 @@ function useOrganizationJsonLd(
 export function PublicHomePage() {
   useJsFlag();
   useScrollToHash();
-  const { language, setLanguage } = useLanguage();
-  useSeoMeta(language);
+  useSeoMeta();
 
-  const categories = useQuery({
-    queryKey: ['public', 'categories', language],
-    queryFn: () => publicApi.categories(language),
-  });
-  const heroStats = useQuery({
-    queryKey: ['public', 'hero-stats', language],
-    queryFn: () => publicApi.heroStats(language),
-  });
-  const portfolio = useQuery({
-    queryKey: ['public', 'portfolio', language],
-    queryFn: () => publicApi.portfolioItems(language),
-  });
+  const categories = useQuery({ queryKey: ['public', 'categories'], queryFn: publicApi.categories });
+  const heroStats = useQuery({ queryKey: ['public', 'hero-stats'], queryFn: publicApi.heroStats });
+  const portfolio = useQuery({ queryKey: ['public', 'portfolio'], queryFn: publicApi.portfolioItems });
   const socialLinks = useQuery({ queryKey: ['public', 'social-links'], queryFn: publicApi.socialLinks });
-  const contactInfo = useQuery({
-    queryKey: ['public', 'contact-info', language],
-    queryFn: () => publicApi.contactInfo(language),
-  });
-  const siteContent = useQuery({
-    queryKey: ['public', 'site-content', language],
-    queryFn: () => publicApi.siteContent(language),
-  });
+  const contactInfo = useQuery({ queryKey: ['public', 'contact-info'], queryFn: publicApi.contactInfo });
+  const siteContent = useQuery({ queryKey: ['public', 'site-content'], queryFn: publicApi.siteContent });
   const t = contentLookup(siteContent.data);
-  const ui = useT(language);
-  useOrganizationJsonLd(contactInfo.data, socialLinks.data, language);
+  const ui = useT();
+  useOrganizationJsonLd(contactInfo.data, socialLinks.data);
 
   return (
     <>
-      <SiteHeader language={language} onLanguageChange={setLanguage} />
+      <SiteHeader />
 
       <main>
         <section id="top" className="hero-section">
@@ -148,7 +127,7 @@ export function PublicHomePage() {
                           <source srcSet={`${copy.imageBase}.avif`} type="image/avif" />
                           <img
                             src={`${copy.imageBase}.webp`}
-                            alt={copy.imageAlt[language]}
+                            alt={copy.imageAlt}
                             width={copy.width}
                             height={copy.height}
                             loading="lazy"
@@ -159,8 +138,8 @@ export function PublicHomePage() {
                         <div className="cat-card-index">{copy.index}</div>
                         <div className="cat-card-body">
                           <h3>{category.name}</h3>
-                          <p>{copy.description[language]}</p>
-                          <span className="cat-card-more">{copy.cta[language]}</span>
+                          <p>{copy.description}</p>
+                          <span className="cat-card-more">{copy.cta}</span>
                         </div>
                         <span className="card-arrow" aria-hidden="true">→</span>
                       </Link>
@@ -180,17 +159,13 @@ export function PublicHomePage() {
             </div>
             <div className="stones-cards">
               {STONE_TYPE_CARDS.map((card) => (
-                <Reveal className="stone-card" key={card.filterValue ?? card.title.ru}>
-                  <Link
-                    to={card.filterValue ? `/catalog/stone?stone_type=${card.filterValue}` : '/catalog/stone'}
-                    className="stone-card-link"
-                    aria-label={card.title[language]}
-                  >
+                <Reveal className="stone-card" key={card.title}>
+                  <Link to="/catalog/stone" className="stone-card-link" aria-label={card.title}>
                     <picture>
                       <source srcSet={`${card.imageBase}.avif`} type="image/avif" />
                       <img
                         src={`${card.imageBase}.webp`}
-                        alt={card.imageAlt[language]}
+                        alt={card.imageAlt}
                         width={card.width}
                         height={card.height}
                         loading="lazy"
@@ -198,8 +173,8 @@ export function PublicHomePage() {
                       />
                     </picture>
                     <div className="stone-card-body">
-                      <h3>{card.title[language]}</h3>
-                      <p>{card.description[language]}</p>
+                      <h3>{card.title}</h3>
+                      <p>{card.description}</p>
                     </div>
                     <span className="stone-card-arrow" aria-hidden="true">↗</span>
                   </Link>
@@ -348,13 +323,13 @@ export function PublicHomePage() {
               </div>
             </div>
             <div className="contacts-form-wrap">
-              <ContactForm language={language} />
+              <ContactForm />
             </div>
           </div>
         </section>
       </main>
 
-      <SiteFooter language={language} />
+      <SiteFooter />
     </>
   );
 }

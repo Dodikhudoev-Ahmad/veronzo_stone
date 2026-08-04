@@ -1,20 +1,12 @@
-import type { LanguageCode } from './useLanguage';
 import type { PublicContactInfo } from './api';
 
-// PublicContactInfoResponse has no id/key (backend comment: "Label is the
-// natural key") -- that was fine while every ContactInfoTranslation.Label
-// was Russian, but Stage 24 added real per-language labels, so matching
-// against a single hardcoded Russian string breaks for en/tg/fa. Mirrors the
-// exact Label translations inserted for ContactInfos #2 (Phone) and #3
-// (Email) across all 4 supported languages.
-const PHONE_LABEL: Record<LanguageCode, string> = { ru: 'Телефон', tg: 'Телефон', en: 'Phone', fa: 'تلفن' };
-const EMAIL_LABEL: Record<LanguageCode, string> = { ru: 'Почта', tg: 'Почтаи электронӣ', en: 'Email', fa: 'ایمیل' };
+// PublicContactInfo has no id/key ("Label is the natural key") -- matches
+// against the Russian ContactInfo.Label the backend seeds/admin edits
+// (the public site is Russian-only, see useLanguage.ts's removal note).
+const PHONE_LABEL = 'Телефон';
+const EMAIL_LABEL = 'Почта';
 
-export function findContactValue(
-  contactInfo: PublicContactInfo[] | undefined,
-  kind: 'phone' | 'email',
-  language: LanguageCode,
-): string | undefined {
-  const target = kind === 'phone' ? PHONE_LABEL[language] : EMAIL_LABEL[language];
+export function findContactValue(contactInfo: PublicContactInfo[] | undefined, kind: 'phone' | 'email'): string | undefined {
+  const target = kind === 'phone' ? PHONE_LABEL : EMAIL_LABEL;
   return contactInfo?.find((c) => c.label === target)?.value;
 }

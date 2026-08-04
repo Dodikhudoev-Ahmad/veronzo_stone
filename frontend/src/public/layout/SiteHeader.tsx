@@ -1,8 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useScrollHeader } from '../hooks';
-import { LanguageSwitcher } from '../LanguageSwitcher';
-import type { LanguageCode } from '../useLanguage';
 import { useT, type UIStringKey } from '../uiStrings';
 
 const NAV_LINKS: { href: string; key: UIStringKey }[] = [
@@ -12,18 +10,13 @@ const NAV_LINKS: { href: string; key: UIStringKey }[] = [
   { href: '/#why', key: 'nav.why' },
 ];
 
-interface SiteHeaderProps {
-  language?: LanguageCode;
-  onLanguageChange?: (lang: LanguageCode) => void;
-}
-
 // Shared across the homepage and the catalog pages — anchors always point
 // back to "/#section" so navigating from a catalog page returns to the
 // right homepage section instead of scrolling nowhere.
-export function SiteHeader({ language, onLanguageChange }: SiteHeaderProps) {
+export function SiteHeader() {
   const headerRef = useScrollHeader<HTMLElement>();
   const [menuOpen, setMenuOpen] = useState(false);
-  const t = useT(language ?? 'ru');
+  const t = useT();
 
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
@@ -49,9 +42,6 @@ export function SiteHeader({ language, onLanguageChange }: SiteHeaderProps) {
               <a key={link.href} href={link.href}>{t(link.key)}</a>
             ))}
           </div>
-          {onLanguageChange && language && (
-            <LanguageSwitcher language={language} onChange={onLanguageChange} />
-          )}
           <a href="/#contacts" className="btn btn-primary nav-cta">{t('nav.consultation')}</a>
           <button
             className="burger"
