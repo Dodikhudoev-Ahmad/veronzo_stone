@@ -59,6 +59,20 @@ const STRINGS = {
     fa: 'جستجوی محصولات…',
   },
   'catalog.searchAria': { ru: 'Поиск по товарам', en: 'Search products', tg: 'Ҷустуҷӯи молҳо', fa: 'جستجوی محصولات' },
+
+  'stones.heading': {
+    ru: 'Камень, который задаёт тон интерьеру',
+    en: 'The stone that sets the tone of your interior',
+    tg: 'Санге, ки оҳанги интерйерро муайян мекунад',
+    fa: 'سنگی که فضای داخلی را تعریف می‌کند',
+  },
+  'stones.description': {
+    ru: 'Мрамор, кварц, гранит, травертин, оникс и полудрагоценный камень подобраны для разных сценариев: от спокойной облицовки до акцентных деталей.',
+    en: 'Marble, quartz, granite, travertine, onyx, and semi-precious stone selected for different scenarios — from calm cladding to accent details.',
+    tg: 'Мармар, кварц, гранит, травертин, оникс ва санги нимқиматбаҳо барои вазъиятҳои гуногун интихоб шудаанд — аз рӯпӯшкунии ором то ҷузъиёти акцентӣ.',
+    fa: 'مرمر، کوارتز، گرانیت، تراورتن، اونیکس و سنگ نیمه‌قیمتی برای سناریوهای مختلف انتخاب شده‌اند — از نمای آرام تا جزئیات تأکیدی.',
+  },
+  'stones.cta': { ru: 'Каталог камня →', en: 'Stone catalog →', tg: 'Каталоги санг →', fa: 'کاتالوگ سنگ →' },
   'catalog.filters': { ru: 'Фильтры', en: 'Filters', tg: 'Филтрҳо', fa: 'فیلترها' },
   'catalog.updating': { ru: 'Обновление…', en: 'Updating…', tg: 'Навсозӣ…', fa: 'در حال بروزرسانی…' },
   'catalog.foundCount': {

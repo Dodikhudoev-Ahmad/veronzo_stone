@@ -1,0 +1,20 @@
+{
+    admin off
+    persist_config off
+    auto_https off
+}
+
+:{$PORT:8080} {
+    root * /app/dist
+
+    encode gzip zstd
+
+    try_files {path} /index.html
+    file_server
+
+    header {
+        X-Content-Type-Options "nosniff"
+        X-Frame-Options "SAMEORIGIN"
+        Referrer-Policy "strict-origin-when-cross-origin"
+    }
+}

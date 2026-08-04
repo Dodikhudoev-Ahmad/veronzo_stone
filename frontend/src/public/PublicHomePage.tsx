@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import { contentLookup, publicApi, type PublicContactInfo, type PublicSocialLink } from './api';
-import { CATALOG_CARD_COPY, SOCIAL_ICON_LABEL } from './catalogContent';
+import { CATALOG_CARD_COPY, SOCIAL_ICON_LABEL, STONE_TYPE_CARDS } from './catalogContent';
 import { findContactValue } from './contactLabels';
 import { ContactForm } from './ContactForm';
 import { useJsFlag, useScrollToHash } from './hooks';
@@ -170,6 +170,44 @@ export function PublicHomePage() {
                     </Reveal>
                   );
                 })}
+            </div>
+          </div>
+        </section>
+
+        <section id="stones" className="stones-section">
+          <div className="stones-grid">
+            <div className="stones-info">
+              <h2>{ui('stones.heading')}</h2>
+              <p>{ui('stones.description')}</p>
+              <Link to="/catalog/stone" className="btn stones-cta">{ui('stones.cta')}</Link>
+            </div>
+            <div className="stones-cards">
+              {STONE_TYPE_CARDS.map((card) => (
+                <Reveal className="stone-card" key={card.filterValue ?? card.title.ru}>
+                  <Link
+                    to={card.filterValue ? `/catalog/stone?stone_type=${card.filterValue}` : '/catalog/stone'}
+                    className="stone-card-link"
+                    aria-label={card.title[language]}
+                  >
+                    <picture>
+                      <source srcSet={`${card.imageBase}.avif`} type="image/avif" />
+                      <img
+                        src={`${card.imageBase}.webp`}
+                        alt={card.imageAlt[language]}
+                        width={card.width}
+                        height={card.height}
+                        loading="lazy"
+                        decoding="async"
+                      />
+                    </picture>
+                    <div className="stone-card-body">
+                      <h3>{card.title[language]}</h3>
+                      <p>{card.description[language]}</p>
+                    </div>
+                    <span className="stone-card-arrow" aria-hidden="true">↗</span>
+                  </Link>
+                </Reveal>
+              ))}
             </div>
           </div>
         </section>

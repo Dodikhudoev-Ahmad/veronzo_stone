@@ -100,6 +100,110 @@ export const CATALOG_CARD_COPY: Record<string, CatalogCardCopy> = {
   },
 };
 
+// Homepage "stones" section (grid of stone material cards next to the sticky
+// intro text). Card identity/order is fixed editorial content, same status as
+// CATALOG_CARD_COPY above — not an API-backed entity list. `filterValue` links
+// a card to the matching `stone_type` product-attribute option (seeded in
+// DbSeeder.SeedProductAttributesAsync) so the card deep-links into the real,
+// already-filterable catalog instead of duplicating that data; "semi-precious"
+// has no such option yet, so it links to the unfiltered stone catalog.
+export interface StoneTypeCard {
+  filterValue: string | null;
+  title: Record<LanguageCode, string>;
+  description: Record<LanguageCode, string>;
+  imageBase: string;
+  imageAlt: Record<LanguageCode, string>;
+  width: number;
+  height: number;
+}
+
+export const STONE_TYPE_CARDS: StoneTypeCard[] = [
+  {
+    filterValue: 'marble',
+    title: { ru: 'Мрамор', en: 'Marble', tg: 'Мармар', fa: 'مرمر' },
+    description: {
+      ru: 'Классика с благородным рисунком прожилок — для полов, лестниц и облицовки.',
+      en: 'A timeless veined classic — for floors, staircases, and cladding.',
+      tg: 'Классикаи бо нақши рагҳои муаззам — барои фарш, зинапоя ва рӯпӯшкунӣ.',
+      fa: 'کلاسیکی با رگه‌های اصیل — برای کف‌پوش، پلکان و نما.',
+    },
+    imageBase: '/assets/images/portfolio-ostozhenka',
+    imageAlt: { ru: 'Мрамор', en: 'Marble', tg: 'Мармар', fa: 'مرمر' },
+    width: 1200,
+    height: 799,
+  },
+  {
+    filterValue: 'quartz',
+    title: { ru: 'Кварц', en: 'Quartz', tg: 'Кварц', fa: 'کوارتز' },
+    description: {
+      ru: 'Инженерный камень без пор — стабильный цвет и прочность для кухонь и полов.',
+      en: 'Non-porous engineered stone — consistent color and strength for kitchens and floors.',
+      tg: 'Санги муҳандисӣ бе сӯрох — ранги устувор ва мустаҳкамӣ барои ошхона ва фарш.',
+      fa: 'سنگ مهندسی بدون منفذ — رنگ ثابت و استحکام برای آشپزخانه و کف.',
+    },
+    imageBase: '/assets/images/catalog-stone',
+    imageAlt: { ru: 'Кварц', en: 'Quartz', tg: 'Кварц', fa: 'کوارتز' },
+    width: 900,
+    height: 900,
+  },
+  {
+    filterValue: 'granite',
+    title: { ru: 'Гранит', en: 'Granite', tg: 'Гранит', fa: 'گرانیت' },
+    description: {
+      ru: 'Плотная текстура и высокая износостойкость — для фасадов и столешниц.',
+      en: 'Dense texture and high wear resistance — for facades and countertops.',
+      tg: 'Матни фишурда ва тобоварии баланд — барои фасад ва рӯимизӣ.',
+      fa: 'بافت متراکم و مقاومت بالا — برای نما و رویه‌کار.',
+    },
+    imageBase: '/assets/images/catalog-stone',
+    imageAlt: { ru: 'Гранит', en: 'Granite', tg: 'Гранит', fa: 'گرانیت' },
+    width: 900,
+    height: 900,
+  },
+  {
+    filterValue: 'travertine',
+    title: { ru: 'Травертин', en: 'Travertine', tg: 'Травертин', fa: 'تراورتن' },
+    description: {
+      ru: 'Тёплая пористая фактура — для стен, террас и спа-зон.',
+      en: 'A warm, porous texture — for walls, terraces, and spa areas.',
+      tg: 'Матни гарм ва сӯрохдор — барои девор, тарраса ва фазои спа.',
+      fa: 'بافت گرم و متخلخل — برای دیوار، تراس و فضای اسپا.',
+    },
+    imageBase: '/assets/images/portfolio-rublevka',
+    imageAlt: { ru: 'Травертин', en: 'Travertine', tg: 'Травертин', fa: 'تراورتن' },
+    width: 800,
+    height: 533,
+  },
+  {
+    filterValue: null,
+    title: { ru: 'Полудрагоценный камень', en: 'Semi-precious stone', tg: 'Санги нимқиматбаҳо', fa: 'سنگ نیمه‌قیمتی' },
+    description: {
+      ru: 'Акцентные вставки с подсветкой — для деталей, которые запоминаются.',
+      en: 'Backlit accent inlays — for details that leave an impression.',
+      tg: 'Ниёзаҳои акцентӣ бо равшанидиҳӣ — барои ҷузъиёте, ки дар хотир мемонанд.',
+      fa: 'قطعات تزئینی نورپردازی‌شده — برای جزئیاتی که در ذهن می‌مانند.',
+    },
+    imageBase: '/assets/images/catalog-stone',
+    imageAlt: { ru: 'Полудрагоценный камень', en: 'Semi-precious stone', tg: 'Санги нимқиматбаҳо', fa: 'سنگ نیمه‌قیمتی' },
+    width: 900,
+    height: 900,
+  },
+  {
+    filterValue: 'onyx',
+    title: { ru: 'Оникс', en: 'Onyx', tg: 'Оникс', fa: 'اونیکس' },
+    description: {
+      ru: 'Просвечивающий рисунок с подсветкой — для акцентных панелей и барных стоек.',
+      en: 'Translucent veining with backlighting — for accent panels and bar counters.',
+      tg: 'Нақши шаффоф бо равшанӣ — барои панелҳои акцентӣ ва пешхони бар.',
+      fa: 'رگه‌های شفاف با نورپردازی — برای پنل‌های تزئینی و پیشخوان بار.',
+    },
+    imageBase: '/assets/images/portfolio-patriarshie',
+    imageAlt: { ru: 'Оникс', en: 'Onyx', tg: 'Оникс', fa: 'اونیکس' },
+    width: 800,
+    height: 800,
+  },
+];
+
 export const SOCIAL_ICON_LABEL: Record<string, string> = {
   whatsapp: 'WhatsApp',
   telegram: 'Telegram',
