@@ -107,6 +107,13 @@ export const CATALOG_CARD_COPY: Record<string, CatalogCardCopy> = {
 // DbSeeder.SeedProductAttributesAsync) so the card deep-links into the real,
 // already-filterable catalog instead of duplicating that data; "semi-precious"
 // has no such option yet, so it links to the unfiltered stone catalog.
+//
+// Card images (catalog-stone-{marble,quartz,granite,travertine,onyx,semiprecious})
+// are real material surface photography, not the furniture/interior stock
+// photos used elsewhere in this file — sourced from ambientCG
+// (https://ambientcg.com, assets Marble012/Marble021/Granite002A/
+// Travertine009/Onyx012/Onyx006), released under CC0 1.0 (public domain,
+// free for commercial use, no attribution required).
 export interface StoneTypeCard {
   filterValue: string | null;
   title: Record<LanguageCode, string>;
@@ -127,10 +134,10 @@ export const STONE_TYPE_CARDS: StoneTypeCard[] = [
       tg: 'Классикаи бо нақши рагҳои муаззам — барои фарш, зинапоя ва рӯпӯшкунӣ.',
       fa: 'کلاسیکی با رگه‌های اصیل — برای کف‌پوش، پلکان و نما.',
     },
-    imageBase: '/assets/images/portfolio-ostozhenka',
+    imageBase: '/assets/images/catalog-stone-marble',
     imageAlt: { ru: 'Мрамор', en: 'Marble', tg: 'Мармар', fa: 'مرمر' },
-    width: 1200,
-    height: 799,
+    width: 900,
+    height: 900,
   },
   {
     filterValue: 'quartz',
@@ -141,7 +148,7 @@ export const STONE_TYPE_CARDS: StoneTypeCard[] = [
       tg: 'Санги муҳандисӣ бе сӯрох — ранги устувор ва мустаҳкамӣ барои ошхона ва фарш.',
       fa: 'سنگ مهندسی بدون منفذ — رنگ ثابت و استحکام برای آشپزخانه و کف.',
     },
-    imageBase: '/assets/images/catalog-stone',
+    imageBase: '/assets/images/catalog-stone-quartz',
     imageAlt: { ru: 'Кварц', en: 'Quartz', tg: 'Кварц', fa: 'کوارتز' },
     width: 900,
     height: 900,
@@ -155,7 +162,7 @@ export const STONE_TYPE_CARDS: StoneTypeCard[] = [
       tg: 'Матни фишурда ва тобоварии баланд — барои фасад ва рӯимизӣ.',
       fa: 'بافت متراکم و مقاومت بالا — برای نما و رویه‌کار.',
     },
-    imageBase: '/assets/images/catalog-stone',
+    imageBase: '/assets/images/catalog-stone-granite',
     imageAlt: { ru: 'Гранит', en: 'Granite', tg: 'Гранит', fa: 'گرانیت' },
     width: 900,
     height: 900,
@@ -169,10 +176,10 @@ export const STONE_TYPE_CARDS: StoneTypeCard[] = [
       tg: 'Матни гарм ва сӯрохдор — барои девор, тарраса ва фазои спа.',
       fa: 'بافت گرم و متخلخل — برای دیوار، تراس و فضای اسپا.',
     },
-    imageBase: '/assets/images/portfolio-rublevka',
+    imageBase: '/assets/images/catalog-stone-travertine',
     imageAlt: { ru: 'Травертин', en: 'Travertine', tg: 'Травертин', fa: 'تراورتن' },
-    width: 800,
-    height: 533,
+    width: 900,
+    height: 900,
   },
   {
     filterValue: null,
@@ -183,7 +190,7 @@ export const STONE_TYPE_CARDS: StoneTypeCard[] = [
       tg: 'Ниёзаҳои акцентӣ бо равшанидиҳӣ — барои ҷузъиёте, ки дар хотир мемонанд.',
       fa: 'قطعات تزئینی نورپردازی‌شده — برای جزئیاتی که در ذهن می‌مانند.',
     },
-    imageBase: '/assets/images/catalog-stone',
+    imageBase: '/assets/images/catalog-stone-semiprecious',
     imageAlt: { ru: 'Полудрагоценный камень', en: 'Semi-precious stone', tg: 'Санги нимқиматбаҳо', fa: 'سنگ نیمه‌قیمتی' },
     width: 900,
     height: 900,
@@ -197,10 +204,10 @@ export const STONE_TYPE_CARDS: StoneTypeCard[] = [
       tg: 'Нақши шаффоф бо равшанӣ — барои панелҳои акцентӣ ва пешхони бар.',
       fa: 'رگه‌های شفاف با نورپردازی — برای پنل‌های تزئینی و پیشخوان بار.',
     },
-    imageBase: '/assets/images/portfolio-patriarshie',
+    imageBase: '/assets/images/catalog-stone-onyx',
     imageAlt: { ru: 'Оникс', en: 'Onyx', tg: 'Оникс', fa: 'اونیکس' },
-    width: 800,
-    height: 800,
+    width: 900,
+    height: 900,
   },
 ];
 
