@@ -162,6 +162,7 @@ export function PublicHomePage() {
                           <p>{copy.description[language]}</p>
                           <span className="cat-card-more">{copy.cta[language]}</span>
                         </div>
+                        <span className="card-arrow" aria-hidden="true">→</span>
                       </Link>
                     </Reveal>
                   );

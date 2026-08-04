@@ -677,7 +677,10 @@ body.menu-open {
   bottom: 0;
   left: 0;
   right: 0;
-  padding: 30px;
+  /* Extra right padding clears the 48px .card-arrow circle (right: 26px)
+     regardless of breakpoint — the arrow's size/position never changes,
+     only the card's, so this stays a constant 82px everywhere. */
+  padding: 30px 82px 30px 30px;
   transition: transform var(--transition-slow);
 }
 
@@ -703,6 +706,50 @@ body.menu-open {
   font-size: 10px;
   letter-spacing: 1.5px;
   color: #a9c4b0;
+}
+
+/* Shared arrow for every direction card ("Камень", "Двери", "Лифты",
+   "Окна") — one component, same size/color/position on all of them,
+   instead of each card's CTA text carrying its own inline "→". Hidden by
+   default; hover/focus fades it in and shifts it right. Touch devices (no
+   hover) get it always-on via the `(hover: none)` rule below, since
+   there's no gesture there that would ever trigger :hover. */
+.card-arrow {
+  position: absolute;
+  z-index: 3;
+  right: 26px;
+  bottom: 26px;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: #fff;
+  color: #141209;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  opacity: 0;
+  transform: translateX(-8px);
+  transition: opacity 300ms var(--ease-premium), transform 300ms var(--ease-premium);
+}
+
+.cat-card-link:focus-visible .card-arrow {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .cat-card-link:hover .card-arrow {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@media (hover: none) {
+  .card-arrow {
+    opacity: 1;
+    transform: none;
+  }
 }
 
 /* Catalog cards: mobile — .catalog-section's own 46px side padding
@@ -733,7 +780,7 @@ body.menu-open {
   }
 
   .cat-card-body {
-    padding: 22px;
+    padding: 22px 82px 22px 22px;
   }
 }
 
@@ -3087,7 +3134,7 @@ body.menu-open {
   }
 
   .cat-card-body {
-    padding: 20px;
+    padding: 20px 82px 20px 20px;
   }
 
   .hero-image {
