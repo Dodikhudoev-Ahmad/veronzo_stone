@@ -140,7 +140,7 @@ export function ProductDetailPage() {
                 <h2>{ui('product.related')}</h2>
                 <div className="product-grid">
                   {relatedProducts.map((related, index) => (
-                    <ProductCard key={related.id} product={related} categorySlug={categorySlug ?? ''} index={index} />
+                    <ProductCard key={related.id} product={related} categorySlug={categorySlug ?? ''} index={index} language={language} />
                   ))}
                 </div>
               </section>

@@ -200,7 +200,7 @@ export function CatalogCategoryPage() {
             {!isInitialLoading && products.isSuccess && filteredProducts.length > 0 && (
               <div className={`product-grid ${isUpdating ? 'is-updating' : ''}`}>
                 {filteredProducts.map((product, index) => (
-                  <ProductCard key={product.id} product={product} categorySlug={categorySlug ?? ''} index={index} />
+                  <ProductCard key={product.id} product={product} categorySlug={categorySlug ?? ''} index={index} language={language} />
                 ))}
               </div>
             )}

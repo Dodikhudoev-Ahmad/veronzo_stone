@@ -2437,6 +2437,33 @@ body.menu-open {
   margin-bottom: 8px;
 }
 
+/* Sibling of .product-card-link, not nested inside it (see the comment in
+   ProductCard.tsx) — sits as its own strip at the card's bottom edge via
+   normal block stacking, so every card gets the same extra height. */
+.product-card-cta {
+  display: block;
+  padding: 14px 22px 18px;
+  font-family: ui-monospace, Menlo, monospace;
+  font-size: 11.5px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--color-accent);
+  border-top: 1px solid var(--color-cream-soft);
+  transition: background var(--transition-base), color var(--transition-base);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .product-card-cta:hover {
+    background: rgba(47, 70, 56, .08);
+    color: var(--color-text);
+  }
+}
+
+.product-card-cta:focus-visible {
+  outline: 2px solid var(--color-accent-light);
+  outline-offset: -2px;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .product-grid .product-card,
   .product-card-media img {

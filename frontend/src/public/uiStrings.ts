@@ -116,6 +116,13 @@ const STRINGS = {
   'product.imagesAria': { ru: 'Изображения товара', en: 'Product images', tg: 'Тасвирҳои мол', fa: 'تصاویر محصول' },
   'product.imageLabel': { ru: 'Изображение {n}', en: 'Image {n}', tg: 'Тасвири {n}', fa: 'تصویر {n}' },
   'product.related': { ru: 'Похожие товары', en: 'Related products', tg: 'Молҳои монанд', fa: 'محصولات مرتبط' },
+  'product.requestPrice': { ru: 'Запросить цену', en: 'Request price', tg: 'Дархости нарх', fa: 'استعلام قیمت' },
+  'product.requestPriceAria': {
+    ru: 'Запросить цену: {title}',
+    en: 'Request price: {title}',
+    tg: 'Дархости нарх: {title}',
+    fa: 'استعلام قیمت: {title}',
+  },
 
   'notfound.message': {
     ru: 'Страница не найдена. Возможно, ссылка устарела или адрес введён с ошибкой.',
