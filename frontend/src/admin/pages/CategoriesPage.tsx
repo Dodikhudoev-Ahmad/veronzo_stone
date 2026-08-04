@@ -8,6 +8,7 @@ import { TableSkeleton } from '../components/ui/TableSkeleton';
 import { EmptyState } from '../components/ui/EmptyState';
 import { ErrorState } from '../components/ui/ErrorState';
 import { ConfirmDialog } from '../components/ui/ConfirmDialog';
+import { RowActionsMenu } from '../components/ui/RowActionsMenu';
 import { CategoryFormDialog } from '../features/categories/CategoryFormDialog';
 import type { CategoryFormValues } from '../features/categories/categorySchema';
 import { TranslationEditorModal } from '../features/translations/TranslationEditorModal';
@@ -97,25 +98,15 @@ export default function CategoriesPage() {
       label: '',
       align: 'right',
       render: (c) => (
-        <div className="flex justify-end gap-3">
-          <button
-            type="button"
-            aria-label={`Переводы «${c.name}»`}
-            className="text-accent hover:underline"
-            onClick={() => setTranslationsTarget(c)}
-          >
-            Переводы
-          </button>
-          <button
-            type="button"
-            className="text-accent hover:underline"
-            onClick={() => setDialogState({ mode: 'edit', category: c })}
-          >
-            Изменить
-          </button>
-          <button type="button" className="text-error hover:underline" onClick={() => setDeleteTarget(c)}>
-            Удалить
-          </button>
+        <div className="flex justify-end">
+          <RowActionsMenu
+            ariaLabel={`Действия: «${c.name}»`}
+            actions={[
+              { label: 'Переводы', onClick: () => setTranslationsTarget(c) },
+              { label: 'Изменить', onClick: () => setDialogState({ mode: 'edit', category: c }) },
+              { label: 'Удалить', variant: 'danger', onClick: () => setDeleteTarget(c) },
+            ]}
+          />
         </div>
       ),
     },
@@ -132,7 +123,7 @@ export default function CategoriesPage() {
           <button
             type="button"
             onClick={() => setDialogState({ mode: 'create' })}
-            className="rounded-pill bg-accent px-4 py-2 text-sm font-semibold text-cream transition hover:brightness-110"
+            className="whitespace-nowrap rounded-pill bg-accent px-4 py-2 text-sm font-semibold text-cream transition hover:brightness-110"
           >
             + Добавить
           </button>

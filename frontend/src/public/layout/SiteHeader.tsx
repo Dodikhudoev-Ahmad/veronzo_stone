@@ -3,12 +3,13 @@ import { Link } from 'react-router-dom';
 import { useScrollHeader } from '../hooks';
 import { LanguageSwitcher } from '../LanguageSwitcher';
 import type { LanguageCode } from '../useLanguage';
+import { useT, type UIStringKey } from '../uiStrings';
 
-const NAV_LINKS = [
-  { href: '/#about', label: 'О компании' },
-  { href: '/#catalog', label: 'Каталог' },
-  { href: '/#portfolio', label: 'Портфолио' },
-  { href: '/#why', label: 'Почему мы' },
+const NAV_LINKS: { href: string; key: UIStringKey }[] = [
+  { href: '/#about', key: 'nav.about' },
+  { href: '/#catalog', key: 'nav.catalog' },
+  { href: '/#portfolio', key: 'nav.portfolio' },
+  { href: '/#why', key: 'nav.why' },
 ];
 
 interface SiteHeaderProps {
@@ -22,6 +23,7 @@ interface SiteHeaderProps {
 export function SiteHeader({ language, onLanguageChange }: SiteHeaderProps) {
   const headerRef = useScrollHeader<HTMLElement>();
   const [menuOpen, setMenuOpen] = useState(false);
+  const t = useT(language ?? 'ru');
 
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
@@ -44,16 +46,16 @@ export function SiteHeader({ language, onLanguageChange }: SiteHeaderProps) {
         <div className="nav-right">
           <div className="nav-links">
             {NAV_LINKS.map((link) => (
-              <a key={link.href} href={link.href}>{link.label}</a>
+              <a key={link.href} href={link.href}>{t(link.key)}</a>
             ))}
           </div>
           {onLanguageChange && language && (
             <LanguageSwitcher language={language} onChange={onLanguageChange} />
           )}
-          <a href="/#contacts" className="btn btn-primary nav-cta">Консультация</a>
+          <a href="/#contacts" className="btn btn-primary nav-cta">{t('nav.consultation')}</a>
           <button
             className="burger"
-            aria-label="Меню"
+            aria-label={t('nav.menu')}
             aria-expanded={menuOpen}
             aria-controls="mobileMenu"
             onClick={() => setMenuOpen((v) => !v)}
@@ -64,9 +66,9 @@ export function SiteHeader({ language, onLanguageChange }: SiteHeaderProps) {
       </nav>
       <div className="mobile-menu" id="mobileMenu" hidden={!menuOpen}>
         {NAV_LINKS.map((link) => (
-          <a key={link.href} href={link.href} onClick={() => setMenuOpen(false)}>{link.label}</a>
+          <a key={link.href} href={link.href} onClick={() => setMenuOpen(false)}>{t(link.key)}</a>
         ))}
-        <a href="/#contacts" className="mobile-menu-contacts" onClick={() => setMenuOpen(false)}>Контакты</a>
+        <a href="/#contacts" className="mobile-menu-contacts" onClick={() => setMenuOpen(false)}>{t('nav.contacts')}</a>
       </div>
     </header>
   );

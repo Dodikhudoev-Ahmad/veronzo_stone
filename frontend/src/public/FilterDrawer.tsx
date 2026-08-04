@@ -1,10 +1,13 @@
 import { useEffect, useRef, type ReactNode } from 'react';
+import type { LanguageCode } from './useLanguage';
+import { useT } from './uiStrings';
 
 interface FilterDrawerProps {
   open: boolean;
   onClose: () => void;
   onApply: () => void;
   children: ReactNode;
+  language: LanguageCode;
 }
 
 export const FILTER_DRAWER_ID = 'catalog-filter-drawer';
@@ -12,8 +15,9 @@ export const FILTER_DRAWER_ID = 'catalog-filter-drawer';
 // Mobile/tablet only (<=1024px, see .catalog-filters-toggle in styles.css).
 // Stays mounted at all times so both open and close can actually animate —
 // visibility is toggled via the `is-open` class, not conditional rendering.
-export function FilterDrawer({ open, onClose, onApply, children }: FilterDrawerProps) {
+export function FilterDrawer({ open, onClose, onApply, children, language }: FilterDrawerProps) {
   const closeButtonRef = useRef<HTMLButtonElement>(null);
+  const ui = useT(language);
 
   useEffect(() => {
     if (!open) {
@@ -49,17 +53,17 @@ export function FilterDrawer({ open, onClose, onApply, children }: FilterDrawerP
         id={FILTER_DRAWER_ID}
         role="dialog"
         aria-modal="true"
-        aria-label="Фильтры"
+        aria-label={ui('filters.title')}
         inert={!open}
         className={`filter-drawer-panel ${open ? 'is-open' : ''}`}
       >
         <div className="filter-drawer-header">
-          <h2>Фильтры</h2>
+          <h2>{ui('filters.title')}</h2>
           <button
             ref={closeButtonRef}
             type="button"
             onClick={onClose}
-            aria-label="Закрыть фильтры"
+            aria-label={ui('filters.close')}
             className="filter-drawer-close"
           >
             ✕
@@ -70,7 +74,7 @@ export function FilterDrawer({ open, onClose, onApply, children }: FilterDrawerP
 
         <div className="filter-drawer-footer">
           <button type="button" className="btn-primary filter-drawer-apply" onClick={onApply}>
-            Применить
+            {ui('filters.apply')}
           </button>
         </div>
       </div>

@@ -3,6 +3,7 @@ import { SiteFooter } from './layout/SiteFooter';
 import { SiteHeader } from './layout/SiteHeader';
 import { useLanguage } from './useLanguage';
 import { useDocumentTitle, useRobotsNoIndex } from './seo';
+import { useT } from './uiStrings';
 
 // A client-rendered SPA can't send a real HTTP 404 status, so the two things
 // that actually matter here are: tell a human clearly (rather than the old
@@ -10,6 +11,7 @@ import { useDocumentTitle, useRobotsNoIndex } from './seo';
 // crawlers not to index this URL via a noindex robots meta tag.
 export function NotFoundPage() {
   const { language, setLanguage } = useLanguage();
+  const ui = useT(language);
   useDocumentTitle('Страница не найдена — Veronzo');
   useRobotsNoIndex();
 
@@ -19,11 +21,11 @@ export function NotFoundPage() {
       <main className="catalog-page wrap page-enter">
         <div className="state-message not-found-message">
           <p className="not-found-code">404</p>
-          <p>Страница не найдена. Возможно, ссылка устарела или адрес введён с ошибкой.</p>
-          <Link to="/" className="btn btn-primary state-retry">На главную</Link>
+          <p>{ui('notfound.message')}</p>
+          <Link to="/" className="btn btn-primary state-retry">{ui('notfound.cta')}</Link>
         </div>
       </main>
-      <SiteFooter />
+      <SiteFooter language={language} />
     </>
   );
 }

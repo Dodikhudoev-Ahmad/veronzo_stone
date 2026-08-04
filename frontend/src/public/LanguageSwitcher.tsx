@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { SUPPORTED_LANGUAGES, type LanguageCode } from './useLanguage';
+import { useT } from './uiStrings';
 
 const SHORT_LABELS: Record<LanguageCode, string> = { ru: 'RU', tg: 'TG', en: 'EN', fa: 'FA' };
 const FULL_LABELS: Record<LanguageCode, string> = { ru: 'Русский', tg: 'Тоҷикӣ', en: 'English', fa: 'فارسی' };
@@ -10,6 +11,7 @@ interface LanguageSwitcherProps {
 }
 
 export function LanguageSwitcher({ language, onChange }: LanguageSwitcherProps) {
+  const ui = useT(language);
   const [open, setOpen] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -82,7 +84,7 @@ export function LanguageSwitcher({ language, onChange }: LanguageSwitcherProps) 
         </svg>
       </button>
       {open && (
-        <div className="lang-switcher-menu" role="menu" aria-label="Выбор языка" ref={menuRef} onKeyDown={onMenuKeyDown}>
+        <div className="lang-switcher-menu" role="menu" aria-label={ui('lang.ariaLabel')} ref={menuRef} onKeyDown={onMenuKeyDown}>
           {SUPPORTED_LANGUAGES.map((code) => (
             <button
               key={code}

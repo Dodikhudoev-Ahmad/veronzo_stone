@@ -42,7 +42,7 @@ function Harness() {
       </button>
       <div data-testid="committed">{JSON.stringify(committed)}</div>
 
-      <FilterDrawer open={open} onClose={() => setOpen(false)} onApply={() => { setCommitted(staged); setOpen(false); }}>
+      <FilterDrawer open={open} onClose={() => setOpen(false)} onApply={() => { setCommitted(staged); setOpen(false); }} language="ru">
         <FilterPanel
           idPrefix="drawer"
           showTitle={false}
@@ -51,6 +51,7 @@ function Harness() {
           onToggle={toggleStaged}
           onClear={() => setStaged({})}
           activeCount={Object.values(staged).flat().length}
+          language="ru"
         />
       </FilterDrawer>
     </>

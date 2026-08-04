@@ -9,6 +9,7 @@ import { EmptyState } from '../components/ui/EmptyState';
 import { ErrorState } from '../components/ui/ErrorState';
 import { ConfirmDialog } from '../components/ui/ConfirmDialog';
 import { ImagePreview } from '../components/ui/ImagePreview';
+import { RowActionsMenu } from '../components/ui/RowActionsMenu';
 import { ProductFormDialog } from '../features/products/ProductFormDialog';
 import { ProductGalleryModal } from '../features/products/ProductGalleryModal';
 import type { ProductFormValues } from '../features/products/productSchema';
@@ -166,39 +167,16 @@ export default function ProductsPage() {
       label: '',
       align: 'right',
       render: (p) => (
-        <div className="flex justify-end gap-3">
-          <button
-            type="button"
-            aria-label={`Переводы «${p.title}»`}
-            className="text-accent hover:underline"
-            onClick={() => setTranslationsTarget(p)}
-          >
-            Переводы
-          </button>
-          <button
-            type="button"
-            aria-label={`Галерея «${p.title}»`}
-            className="text-accent hover:underline"
-            onClick={() => setGalleryTarget(p)}
-          >
-            Галерея
-          </button>
-          <button
-            type="button"
-            aria-label={`Изменить «${p.title}»`}
-            className="text-accent hover:underline"
-            onClick={() => setDialogState({ mode: 'edit', product: p })}
-          >
-            Изменить
-          </button>
-          <button
-            type="button"
-            aria-label={`Удалить «${p.title}»`}
-            className="text-error hover:underline"
-            onClick={() => setDeleteTarget(p)}
-          >
-            Удалить
-          </button>
+        <div className="flex justify-end">
+          <RowActionsMenu
+            ariaLabel={`Действия: «${p.title}»`}
+            actions={[
+              { label: 'Переводы', onClick: () => setTranslationsTarget(p) },
+              { label: 'Галерея', onClick: () => setGalleryTarget(p) },
+              { label: 'Изменить', onClick: () => setDialogState({ mode: 'edit', product: p }) },
+              { label: 'Удалить', variant: 'danger', onClick: () => setDeleteTarget(p) },
+            ]}
+          />
         </div>
       ),
     },
@@ -218,7 +196,7 @@ export default function ProductsPage() {
               type="button"
               onClick={() => setDialogState({ mode: 'create' })}
               disabled={!hasCategories}
-              className="rounded-pill bg-accent px-4 py-2 text-sm font-semibold text-cream transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-50"
+              className="whitespace-nowrap rounded-pill bg-accent px-4 py-2 text-sm font-semibold text-cream transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-50"
             >
               + Добавить
             </button>

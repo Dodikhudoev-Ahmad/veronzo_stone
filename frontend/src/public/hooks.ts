@@ -38,6 +38,22 @@ export function useScrollHeader<T extends HTMLElement>() {
   return ref;
 }
 
+// A plain `<a href="/#contacts">` clicked from a different route (e.g. a
+// product detail page) is a full page reload, not a client-side transition —
+// the browser lands on `/`, parses the still-empty SPA shell, and attempts
+// its native scroll-to-hash before React has mounted the section with that
+// id. That native attempt finds nothing and never retries, so the visitor
+// silently lands at the top of the homepage instead of the section they
+// clicked through to. Runs once after this page's own content has mounted,
+// when the target id is guaranteed to already be in the DOM.
+export function useScrollToHash(): void {
+  useEffect(() => {
+    if (!window.location.hash) return;
+    const target = document.querySelector(window.location.hash);
+    target?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, []);
+}
+
 // Reveals an element (adds `is-visible`) the first time it scrolls into
 // view, then stops observing it — matches the one-shot reveal in main.js.
 // `[data-reveal]` (which CSS uses to gate opacity, only under `.js`) is set

@@ -62,6 +62,44 @@ body {
   overflow-x: hidden;
 }
 
+/* One continuous light marble surface behind the entire public site — a real
+   photographed Calacatta/Carrara marble slab (not a CSS/SVG simulation), as a
+   single viewport-locked layer (position: fixed) instead of a per-section
+   image, so there's nothing to seam or repeat as the page scrolls, and every
+   section (hero, catalog, about, portfolio, why, contacts, category/product
+   pages) shows the same surface instead of looking like separate blocks.
+   Source: photo by H&CO on Pexels (pexels.com/photo/marble-surface-2341290),
+   Pexels License — free for commercial use, no attribution required,
+   modification permitted; resized/re-encoded locally, no external hotlink.
+   `:has(.site-header)` scopes this to public pages only — /admin has no
+   .site-header, so this can never affect it regardless of the admin shell's
+   own background. `position: fixed` (not background-attachment: fixed) is
+   the deliberate choice: it avoids the classic iOS/Safari fixed-background
+   scroll-repaint bug entirely, since Safari handles fixed-positioned
+   elements natively. */
+body:has(.site-header)::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -2;
+  pointer-events: none;
+  background-image: url('/assets/images/marble-background.webp');
+  background-position: center top;
+  background-size: cover;
+  background-repeat: no-repeat;
+}
+
+/* Light readability wash over the veining — kept low (~13%) so the veins
+   stay clearly visible, per the reference site, rather than washed out. */
+body:has(.site-header)::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background: rgba(255, 255, 255, 0.13);
+}
+
 a {
   color: var(--color-text);
   text-decoration: none;
@@ -485,7 +523,6 @@ body.menu-open {
 /* ---------- Catalog ---------- */
 .catalog-section {
   padding: 96px 46px;
-  background: var(--color-bg-alt);
 }
 
 .cat-filter {
@@ -690,7 +727,6 @@ body.menu-open {
 /* ---------- Portfolio ---------- */
 .portfolio-section {
   padding: 96px 46px;
-  background: var(--color-bg-alt);
 }
 
 .portfolio-title {
@@ -835,11 +871,6 @@ body.menu-open {
 /* ---------- Contacts ---------- */
 .contacts-section {
   padding: 40px 46px;
-  background-color: var(--color-bg-alt);
-  background-image:
-    linear-gradient(135deg, rgba(255, 255, 255, 0.6) 0%, rgba(255, 255, 255, 0) 45%),
-    linear-gradient(322deg, rgba(20, 18, 9, 0.035) 0%, rgba(20, 18, 9, 0) 30%),
-    linear-gradient(64deg, rgba(20, 18, 9, 0.025) 0%, rgba(20, 18, 9, 0) 25%);
 }
 
 .contacts {

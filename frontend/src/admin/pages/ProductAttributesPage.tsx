@@ -7,6 +7,7 @@ import { TableSkeleton } from '../components/ui/TableSkeleton';
 import { EmptyState } from '../components/ui/EmptyState';
 import { ErrorState } from '../components/ui/ErrorState';
 import { ConfirmDialog } from '../components/ui/ConfirmDialog';
+import { RowActionsMenu } from '../components/ui/RowActionsMenu';
 import { DefinitionFormDialog } from '../features/productAttributes/DefinitionFormDialog';
 import { OptionFormDialog } from '../features/productAttributes/OptionFormDialog';
 import type { DefinitionFormValues } from '../features/productAttributes/definitionSchema';
@@ -166,7 +167,7 @@ export default function ProductAttributesPage() {
       label: '',
       align: 'right',
       render: (d) => (
-        <div className="flex justify-end gap-3">
+        <div className="flex items-center justify-end gap-3">
           <button
             type="button"
             aria-label={`Значения «${d.name}»`}
@@ -176,30 +177,14 @@ export default function ProductAttributesPage() {
           >
             Значения →
           </button>
-          <button
-            type="button"
-            aria-label={`Переводы «${d.name}»`}
-            className="text-accent hover:underline"
-            onClick={() => setDefinitionTranslationsTarget(d)}
-          >
-            Переводы
-          </button>
-          <button
-            type="button"
-            aria-label={`Изменить «${d.name}»`}
-            className="text-accent hover:underline"
-            onClick={() => setDefinitionDialog({ mode: 'edit', definition: d })}
-          >
-            Изменить
-          </button>
-          <button
-            type="button"
-            aria-label={`Удалить «${d.name}»`}
-            className="text-error hover:underline"
-            onClick={() => setDeleteDefinitionTarget(d)}
-          >
-            Удалить
-          </button>
+          <RowActionsMenu
+            ariaLabel={`Действия: «${d.name}»`}
+            actions={[
+              { label: 'Переводы', onClick: () => setDefinitionTranslationsTarget(d) },
+              { label: 'Изменить', onClick: () => setDefinitionDialog({ mode: 'edit', definition: d }) },
+              { label: 'Удалить', variant: 'danger', onClick: () => setDeleteDefinitionTarget(d) },
+            ]}
+          />
         </div>
       ),
     },
@@ -215,31 +200,15 @@ export default function ProductAttributesPage() {
       label: '',
       align: 'right',
       render: (o) => (
-        <div className="flex justify-end gap-3">
-          <button
-            type="button"
-            aria-label={`Переводы «${o.label}»`}
-            className="text-accent hover:underline"
-            onClick={() => setOptionTranslationsTarget(o)}
-          >
-            Переводы
-          </button>
-          <button
-            type="button"
-            aria-label={`Изменить «${o.label}»`}
-            className="text-accent hover:underline"
-            onClick={() => setOptionDialog({ mode: 'edit', option: o })}
-          >
-            Изменить
-          </button>
-          <button
-            type="button"
-            aria-label={`Удалить «${o.label}»`}
-            className="text-error hover:underline"
-            onClick={() => setDeleteOptionTarget(o)}
-          >
-            Удалить
-          </button>
+        <div className="flex justify-end">
+          <RowActionsMenu
+            ariaLabel={`Действия: «${o.label}»`}
+            actions={[
+              { label: 'Переводы', onClick: () => setOptionTranslationsTarget(o) },
+              { label: 'Изменить', onClick: () => setOptionDialog({ mode: 'edit', option: o }) },
+              { label: 'Удалить', variant: 'danger', onClick: () => setDeleteOptionTarget(o) },
+            ]}
+          />
         </div>
       ),
     },
@@ -266,7 +235,7 @@ export default function ProductAttributesPage() {
           action={
             <Link
               to="/admin/categories"
-              className="rounded-pill bg-accent px-4 py-2 text-sm font-semibold text-cream transition hover:brightness-110"
+              className="whitespace-nowrap rounded-pill bg-accent px-4 py-2 text-sm font-semibold text-cream transition hover:brightness-110"
             >
               Перейти в «Категории»
             </Link>
@@ -298,7 +267,7 @@ export default function ProductAttributesPage() {
               <button
                 type="button"
                 onClick={() => setDefinitionDialog({ mode: 'create' })}
-                className="rounded-pill bg-accent px-4 py-2 text-sm font-semibold text-cream transition hover:brightness-110"
+                className="whitespace-nowrap rounded-pill bg-accent px-4 py-2 text-sm font-semibold text-cream transition hover:brightness-110"
               >
                 + Добавить характеристику
               </button>
@@ -327,7 +296,7 @@ export default function ProductAttributesPage() {
                 <button
                   type="button"
                   onClick={() => setOptionDialog({ mode: 'create' })}
-                  className="rounded-pill bg-accent px-4 py-2 text-sm font-semibold text-cream transition hover:brightness-110"
+                  className="whitespace-nowrap rounded-pill bg-accent px-4 py-2 text-sm font-semibold text-cream transition hover:brightness-110"
                 >
                   + Добавить значение
                 </button>

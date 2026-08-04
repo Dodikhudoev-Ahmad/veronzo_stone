@@ -18,13 +18,13 @@ export function UserMenu() {
   }
 
   return (
-    <div className="flex items-center gap-4">
-      <span className="text-sm text-muted">{currentUser?.email}</span>
+    <div className="flex min-w-0 items-center gap-4">
+      <span className="hidden min-w-0 truncate text-sm text-muted sm:inline">{currentUser?.email}</span>
       <button
         type="button"
         onClick={handleLogout}
         disabled={loggingOut}
-        className="rounded-pill border border-cream-soft px-4 py-1.5 text-sm text-text transition hover:border-accent hover:text-accent disabled:opacity-60"
+        className="shrink-0 rounded-pill border border-cream-soft px-4 py-1.5 text-sm text-text transition hover:border-accent hover:text-accent disabled:opacity-60"
       >
         {loggingOut ? 'Выход…' : 'Выйти'}
       </button>

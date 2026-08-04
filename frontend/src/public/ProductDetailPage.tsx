@@ -9,10 +9,12 @@ import { PublicImage, resolveImageBase } from './PublicImage';
 import { ProductCard } from './ProductCard';
 import { useLanguage } from './useLanguage';
 import { useCanonical, useDocumentTitle, useJsonLd, useOpenGraph, useRobotsNoIndex } from './seo';
+import { useT } from './uiStrings';
 
 export function ProductDetailPage() {
   const { categorySlug, productId } = useParams<{ categorySlug: string; productId: string }>();
   const { language, setLanguage } = useLanguage();
+  const ui = useT(language);
   const numericId = Number(productId);
   const [activeImageIndex, setActiveImageIndex] = useState(0);
 
@@ -65,24 +67,24 @@ export function ProductDetailPage() {
     <>
       <SiteHeader language={language} onLanguageChange={setLanguage} />
       <main className="catalog-page wrap page-enter">
-        <nav className="breadcrumb" aria-label="Хлебные крошки">
-          <Link to="/">Главная</Link> <span aria-hidden="true">→</span>{' '}
-          <Link to={`/catalog/${categorySlug}`}>Каталог</Link>
+        <nav className="breadcrumb" aria-label={ui('breadcrumb.aria')}>
+          <Link to="/">{ui('breadcrumb.home')}</Link> <span aria-hidden="true">→</span>{' '}
+          <Link to={`/catalog/${categorySlug}`}>{ui('nav.catalog')}</Link>
           {product && <> <span aria-hidden="true">→</span> <span>{product.title}</span></>}
         </nav>
 
-        {productQuery.isLoading && <p className="state-message">Загрузка…</p>}
+        {productQuery.isLoading && <p className="state-message">{ui('loading')}</p>}
 
         {productQuery.isError && !notFound && (
           <div className="state-message state-message-error">
-            <p>Не удалось загрузить товар. Проверьте соединение и попробуйте ещё раз.</p>
+            <p>{ui('product.loadError')}</p>
             <button type="button" className="btn-ghost state-retry" onClick={() => void productQuery.refetch()}>
-              Повторить попытку
+              {ui('retry')}
             </button>
           </div>
         )}
 
-        {notFound && <p className="state-message">Товар не найден. Возможно, он был снят с публикации.</p>}
+        {notFound && <p className="state-message">{ui('product.notFound')}</p>}
 
         {product && (
           <>
@@ -93,14 +95,14 @@ export function ProductDetailPage() {
                     <PublicImage src={activeImage?.imageUrl} alt={product.title} />
                   </div>
                   {product.images.length > 1 && (
-                    <div className="product-detail-thumbs" role="tablist" aria-label="Изображения товара">
+                    <div className="product-detail-thumbs" role="tablist" aria-label={ui('product.imagesAria')}>
                       {product.images.map((image, index) => (
                         <button
                           key={image.imageUrl}
                           type="button"
                           role="tab"
                           aria-selected={index === activeImageIndex}
-                          aria-label={`Изображение ${index + 1}`}
+                          aria-label={ui('product.imageLabel', { n: index + 1 })}
                           className={`product-detail-thumb ${index === activeImageIndex ? 'is-active' : ''}`}
                           onClick={() => setActiveImageIndex(index)}
                         >
@@ -129,13 +131,13 @@ export function ProductDetailPage() {
                   </table>
                 )}
 
-                <a href="/#contacts" className="btn btn-primary">Заявка на консультацию</a>
+                <a href="/#contacts" className="btn btn-primary">{ui('hero.ctaSecondary')}</a>
               </div>
             </div>
 
             {relatedProducts.length > 0 && (
               <section className="related-products">
-                <h2>Похожие товары</h2>
+                <h2>{ui('product.related')}</h2>
                 <div className="product-grid">
                   {relatedProducts.map((related, index) => (
                     <ProductCard key={related.id} product={related} categorySlug={categorySlug ?? ''} index={index} />
@@ -146,7 +148,7 @@ export function ProductDetailPage() {
           </>
         )}
       </main>
-      <SiteFooter />
+      <SiteFooter language={language} />
     </>
   );
 }

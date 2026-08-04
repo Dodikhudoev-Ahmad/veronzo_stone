@@ -13,9 +13,9 @@ export function AdminLayout() {
     <div className="admin-shell flex min-h-screen bg-bg font-sans text-text">
       <Sidebar />
       <MobileNavDrawer open={mobileNavOpen} onClose={() => setMobileNavOpen(false)} />
-      <div className="flex flex-1 flex-col">
+      <div className="flex min-w-0 flex-1 flex-col">
         <Topbar onMenuClick={() => setMobileNavOpen(true)} />
-        <main className="flex-1 p-8">
+        <main className="min-w-0 flex-1 p-8">
           <AdminErrorBoundary>
             <Suspense fallback={<AdminLoader />}>
               <Outlet />

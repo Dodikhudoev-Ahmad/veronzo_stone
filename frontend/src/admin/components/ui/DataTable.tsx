@@ -50,52 +50,90 @@ export function DataTable<T>({ columns, rows, getRowId, sort, onSortChange }: Da
     return sort === column.key ? 'по убыванию' : 'по возрастанию';
   }
 
+  // A wide table (image + title + 3-4 metadata columns + actions) simply
+  // cannot fit a phone-width screen without either shrinking text to
+  // unreadable sizes or scrolling — and a table that forces the *whole page*
+  // to scroll sideways just to reach the last column (found during Stage 24
+  // mobile testing) is worse than either. Below `sm` this renders each row as
+  // a stacked card instead: the first label-less column (almost always the
+  // thumbnail) leads, the first labelled column becomes the card's title, any
+  // remaining labelled columns become small "label: value" chips, and the
+  // actions column (also label-less) sits in the top-right corner — nothing
+  // needs horizontal scrolling because nothing is laid out in a row anymore.
+  const leadingColumns = columns.filter((c) => c.label === '' && c.key !== 'actions');
+  const actionsColumn = columns.find((c) => c.key === 'actions');
+  const fieldColumns = columns.filter((c) => c.label !== '');
+  const [titleColumn, ...restColumns] = fieldColumns;
+
   return (
-    // Horizontal scroll container — added for Portfolio's wider column set
-    // (image + title + meta + tag + sortOrder + visibility + actions), but
-    // purely additive: no prop/behavior change, so Categories/Products keep
-    // rendering exactly as before, just now inside a scrollable wrapper on
-    // narrow viewports instead of overflowing the page.
-    <div className="overflow-x-auto">
-      <table className="w-full min-w-max border-collapse text-sm">
-        <thead>
-          <tr className="border-b border-cream-soft text-left text-xs uppercase tracking-wide text-muted">
-            {columns.map((column) => (
-              <th
-                key={column.key}
-                scope="col"
-                aria-sort={ariaSortFor(column)}
-                className={`py-3 pr-4 font-semibold ${column.align === 'right' ? 'text-right' : 'text-left'}`}
-              >
-                {column.sortable ? (
-                  <button
-                    type="button"
-                    onClick={() => handleHeaderClick(column)}
-                    aria-label={`Сортировать по «${column.label}» ${nextDirectionLabel(column)}`}
-                    className="inline-flex cursor-pointer items-center gap-1 rounded-sm border-0 bg-transparent p-0 font-semibold text-inherit hover:text-text focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-light"
-                  >
-                    {column.label}
-                    <span aria-hidden="true">{sortIndicator(column.key)}</span>
-                  </button>
-                ) : (
-                  column.label
-                )}
-              </th>
+    <>
+      <div className="divide-y divide-cream-soft/60 sm:hidden">
+        {rows.map((row) => (
+          <div key={getRowId(row)} className="flex items-start gap-3 py-3">
+            {leadingColumns.map((column) => (
+              <div key={column.key} className="shrink-0">
+                {column.render(row)}
+              </div>
             ))}
-          </tr>
-        </thead>
-        <tbody>
-          {rows.map((row) => (
-            <tr key={getRowId(row)} className="border-b border-cream-soft/60 last:border-0">
+            <div className="min-w-0 flex-1">
+              {titleColumn && <div className="truncate text-sm font-medium text-text">{titleColumn.render(row)}</div>}
+              {restColumns.length > 0 && (
+                <dl className="mt-1 flex flex-wrap gap-x-3 gap-y-0.5">
+                  {restColumns.map((column) => (
+                    <div key={column.key} className="flex gap-1 text-xs text-muted">
+                      <dt>{column.label}:</dt>
+                      <dd className="text-text">{column.render(row)}</dd>
+                    </div>
+                  ))}
+                </dl>
+              )}
+            </div>
+            {actionsColumn && <div className="shrink-0">{actionsColumn.render(row)}</div>}
+          </div>
+        ))}
+      </div>
+
+      <div className="hidden overflow-x-auto sm:block">
+        <table className="w-full min-w-max border-collapse text-sm">
+          <thead>
+            <tr className="border-b border-cream-soft text-left text-xs uppercase tracking-wide text-muted">
               {columns.map((column) => (
-                <td key={column.key} className={`py-3 pr-4 ${column.align === 'right' ? 'text-right' : 'text-left'}`}>
-                  {column.render(row)}
-                </td>
+                <th
+                  key={column.key}
+                  scope="col"
+                  aria-sort={ariaSortFor(column)}
+                  className={`py-3 pr-4 font-semibold ${column.align === 'right' ? 'text-right' : 'text-left'}`}
+                >
+                  {column.sortable ? (
+                    <button
+                      type="button"
+                      onClick={() => handleHeaderClick(column)}
+                      aria-label={`Сортировать по «${column.label}» ${nextDirectionLabel(column)}`}
+                      className="inline-flex cursor-pointer items-center gap-1 rounded-sm border-0 bg-transparent p-0 font-semibold text-inherit hover:text-text focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-light"
+                    >
+                      {column.label}
+                      <span aria-hidden="true">{sortIndicator(column.key)}</span>
+                    </button>
+                  ) : (
+                    column.label
+                  )}
+                </th>
               ))}
             </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
+          </thead>
+          <tbody>
+            {rows.map((row) => (
+              <tr key={getRowId(row)} className="border-b border-cream-soft/60 last:border-0">
+                {columns.map((column) => (
+                  <td key={column.key} className={`py-3 pr-4 ${column.align === 'right' ? 'text-right' : 'text-left'}`}>
+                    {column.render(row)}
+                  </td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </>
   );
 }

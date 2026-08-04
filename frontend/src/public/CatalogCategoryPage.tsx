@@ -13,10 +13,12 @@ import { FilterDrawer, FILTER_DRAWER_ID } from './FilterDrawer';
 import { useCatalogFilters } from './useCatalogFilters';
 import { useLanguage } from './useLanguage';
 import { useCanonical, useDocumentTitle, useOpenGraph } from './seo';
+import { useT } from './uiStrings';
 
 export function CatalogCategoryPage() {
   const { categorySlug } = useParams<{ categorySlug: string }>();
   const { language, setLanguage } = useLanguage();
+  const ui = useT(language);
   const [search, setSearch] = useState('');
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
   const [stagedFilters, setStagedFilters] = useState<CatalogFilterState>({});
@@ -50,7 +52,7 @@ export function CatalogCategoryPage() {
   useCanonical(`/catalog/${categorySlug}`);
   useOpenGraph(
     category
-      ? { title: `${category.name} — Veronzo`, description: cardCopy?.description, image: cardCopy ? `${cardCopy.imageBase}.webp` : undefined }
+      ? { title: `${category.name} — Veronzo`, description: cardCopy?.description[language], image: cardCopy ? `${cardCopy.imageBase}.webp` : undefined }
       : undefined,
   );
 
@@ -114,12 +116,12 @@ export function CatalogCategoryPage() {
     <>
       <SiteHeader language={language} onLanguageChange={setLanguage} />
       <main className="catalog-page wrap page-enter">
-        <nav className="breadcrumb" aria-label="Хлебные крошки">
-          <Link to="/">Главная</Link> <span aria-hidden="true">→</span> <Link to="/#catalog">Каталог</Link>
+        <nav className="breadcrumb" aria-label={ui('breadcrumb.aria')}>
+          <Link to="/">{ui('breadcrumb.home')}</Link> <span aria-hidden="true">→</span> <Link to="/#catalog">{ui('nav.catalog')}</Link>
           {category && <> <span aria-hidden="true">→</span> <span>{category.name}</span></>}
         </nav>
 
-        <CategoryHero categorySlug={categorySlug ?? ''} categoryName={category?.name} />
+        <CategoryHero categorySlug={categorySlug ?? ''} categoryName={category?.name} language={language} />
 
         <div className="catalog-toolbar">
           <label className="catalog-page-search">
@@ -130,8 +132,8 @@ export function CatalogCategoryPage() {
             <input
               type="search"
               className="catalog-page-filter"
-              placeholder="Поиск по товарам…"
-              aria-label="Поиск по товарам"
+              placeholder={ui('catalog.searchPlaceholder')}
+              aria-label={ui('catalog.searchAria')}
               value={search}
               onChange={(e) => setSearch(e.target.value)}
             />
@@ -146,12 +148,12 @@ export function CatalogCategoryPage() {
                 aria-controls={FILTER_DRAWER_ID}
                 onClick={openMobileFilters}
               >
-                Фильтры{activeCount > 0 ? ` (${activeCount})` : ''}
+                {ui('catalog.filters')}{activeCount > 0 ? ` (${activeCount})` : ''}
               </button>
             )}
             {!isInitialLoading && products.isSuccess && (
               <span className="catalog-result-count" aria-live="polite">
-                {isUpdating ? 'Обновление…' : `Найдено: ${filteredProducts.length}`}
+                {isUpdating ? ui('catalog.updating') : ui('catalog.foundCount', { n: filteredProducts.length })}
               </span>
             )}
           </div>
@@ -167,6 +169,7 @@ export function CatalogCategoryPage() {
                 onToggle={toggleValue}
                 onClear={clearFilters}
                 activeCount={activeCount}
+                language={language}
               />
             </aside>
           )}
@@ -176,19 +179,19 @@ export function CatalogCategoryPage() {
 
             {products.isError && (
               <div className="state-message state-message-error">
-                <p>Не удалось загрузить товары. Проверьте соединение и попробуйте ещё раз.</p>
+                <p>{ui('catalog.loadProductsError')}</p>
                 <button type="button" className="btn-ghost state-retry" onClick={() => void products.refetch()}>
-                  Повторить попытку
+                  {ui('retry')}
                 </button>
               </div>
             )}
 
             {!isInitialLoading && products.isSuccess && filteredProducts.length === 0 && (
               <div className="state-message state-empty">
-                <p>{hasActiveQuery ? 'По заданным условиям ничего не найдено.' : 'В этой категории пока нет товаров.'}</p>
+                <p>{hasActiveQuery ? ui('catalog.noMatches') : ui('catalog.categoryEmpty')}</p>
                 {hasActiveQuery && (
                   <button type="button" className="btn-ghost state-retry" onClick={clearEverything}>
-                    Очистить фильтры
+                    {ui('catalog.clearFilters')}
                   </button>
                 )}
               </div>
@@ -204,9 +207,9 @@ export function CatalogCategoryPage() {
           </div>
         </div>
       </main>
-      <SiteFooter />
+      <SiteFooter language={language} />
 
-      <FilterDrawer open={mobileFiltersOpen} onClose={() => setMobileFiltersOpen(false)} onApply={applyMobileFilters}>
+      <FilterDrawer open={mobileFiltersOpen} onClose={() => setMobileFiltersOpen(false)} onApply={applyMobileFilters} language={language}>
         <FilterPanel
           idPrefix="drawer"
           showTitle={false}
@@ -215,6 +218,7 @@ export function CatalogCategoryPage() {
           onToggle={toggleStaged}
           onClear={() => setStagedFilters({})}
           activeCount={stagedActiveCount}
+          language={language}
         />
       </FilterDrawer>
     </>

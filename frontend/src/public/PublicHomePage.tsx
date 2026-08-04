@@ -2,14 +2,16 @@ import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import { contentLookup, publicApi, type PublicContactInfo, type PublicSocialLink } from './api';
 import { CATALOG_CARD_COPY, SOCIAL_ICON_LABEL } from './catalogContent';
+import { findContactValue } from './contactLabels';
 import { ContactForm } from './ContactForm';
-import { useJsFlag } from './hooks';
+import { useJsFlag, useScrollToHash } from './hooks';
 import { SiteFooter } from './layout/SiteFooter';
 import { SiteHeader } from './layout/SiteHeader';
 import { PublicImage } from './PublicImage';
 import { Reveal } from './Reveal';
-import { useLanguage } from './useLanguage';
+import { useLanguage, type LanguageCode } from './useLanguage';
 import { useCanonical, useDocumentTitle, useJsonLd, useOpenGraph } from './seo';
+import { useT } from './uiStrings';
 
 function useSeoMeta(language: string) {
   const { data } = useQuery({
@@ -22,8 +24,12 @@ function useSeoMeta(language: string) {
   useOpenGraph(data ? { title: data.title, description: data.description, image: data.ogImageUrl } : undefined);
 }
 
-function useOrganizationJsonLd(contactInfo: PublicContactInfo[] | undefined, socialLinks: PublicSocialLink[] | undefined) {
-  const phone = contactInfo?.find((c) => c.label === 'Телефон')?.value;
+function useOrganizationJsonLd(
+  contactInfo: PublicContactInfo[] | undefined,
+  socialLinks: PublicSocialLink[] | undefined,
+  language: LanguageCode,
+) {
+  const phone = findContactValue(contactInfo, 'phone', language);
   const jsonLd = phone
     ? {
         '@context': 'https://schema.org',
@@ -40,6 +46,7 @@ function useOrganizationJsonLd(contactInfo: PublicContactInfo[] | undefined, soc
 
 export function PublicHomePage() {
   useJsFlag();
+  useScrollToHash();
   const { language, setLanguage } = useLanguage();
   useSeoMeta(language);
 
@@ -65,7 +72,8 @@ export function PublicHomePage() {
     queryFn: () => publicApi.siteContent(language),
   });
   const t = contentLookup(siteContent.data);
-  useOrganizationJsonLd(contactInfo.data, socialLinks.data);
+  const ui = useT(language);
+  useOrganizationJsonLd(contactInfo.data, socialLinks.data, language);
 
   return (
     <>
@@ -81,8 +89,8 @@ export function PublicHomePage() {
                 {t('hero.lede', 'Натуральный камень, элитные двери и лифтовые решения под единым технадзором — для архитекторов, дизайнеров и премиум-застройщиков.')}
               </p>
               <div className="hero-actions">
-                <a href="#catalog" className="btn btn-primary">Смотреть каталог</a>
-                <a href="#contacts" className="btn btn-ghost">Заявка на консультацию</a>
+                <a href="#catalog" className="btn btn-primary">{ui('hero.ctaPrimary')}</a>
+                <a href="#contacts" className="btn btn-ghost">{ui('hero.ctaSecondary')}</a>
               </div>
               <div className="hero-stats">
                 {(heroStats.data ?? []).map((stat) => (
@@ -98,7 +106,7 @@ export function PublicHomePage() {
                 <source srcSet="/assets/images/hero-calacatta.avif" type="image/avif" />
                 <img
                   src="/assets/images/hero-calacatta.webp"
-                  alt="Мраморный интерьер Calacatta"
+                  alt={ui('hero.imageAlt')}
                   width={1400}
                   height={2100}
                   decoding="async"
@@ -114,24 +122,22 @@ export function PublicHomePage() {
           <div className="wrap">
             <div className="section-head">
               <div className="section-head-main">
-                <div className="eyebrow-label">Каталог</div>
-                <h2>Материалы и инженерные решения в одной системе</h2>
+                <div className="eyebrow-label">{ui('catalog.eyebrow')}</div>
+                <h2>{ui('catalog.heading')}</h2>
               </div>
               <div className="section-head-note">
                 {t('catalog.sectionNote', 'Четыре направления, единый стандарт качества — от подбора материала до монтажа на объекте.')}
               </div>
             </div>
 
-            {categories.isLoading && <p className="state-message">Загрузка…</p>}
+            {categories.isLoading && <p className="state-message">{ui('loading')}</p>}
 
             {categories.isError && (
-              <p className="state-message state-message-error">
-                Не удалось загрузить каталог. Попробуйте обновить страницу или свяжитесь с нами напрямую.
-              </p>
+              <p className="state-message state-message-error">{ui('catalog.loadError')}</p>
             )}
 
             {categories.isSuccess && categories.data.filter((c) => CATALOG_CARD_COPY[c.slug]).length === 0 && (
-              <p className="state-message">Каталог временно недоступен.</p>
+              <p className="state-message">{ui('catalog.unavailable')}</p>
             )}
 
             <div className="cat3" role="tabpanel">
@@ -146,7 +152,7 @@ export function PublicHomePage() {
                           <source srcSet={`${copy.imageBase}.avif`} type="image/avif" />
                           <img
                             src={`${copy.imageBase}.webp`}
-                            alt={copy.imageAlt}
+                            alt={copy.imageAlt[language]}
                             width={copy.width}
                             height={copy.height}
                             loading="lazy"
@@ -157,8 +163,8 @@ export function PublicHomePage() {
                         <div className="cat-card-index">{copy.index}</div>
                         <div className="cat-card-body">
                           <h3>{category.name}</h3>
-                          <p>{copy.description}</p>
-                          <span className="cat-card-more">{copy.cta}</span>
+                          <p>{copy.description[language]}</p>
+                          <span className="cat-card-more">{copy.cta[language]}</span>
                         </div>
                       </Link>
                     </Reveal>
@@ -175,7 +181,7 @@ export function PublicHomePage() {
                 <source srcSet="/assets/images/about-workshop.avif" type="image/avif" />
                 <img
                   src="/assets/images/about-workshop.webp"
-                  alt="Мастерская обработки камня"
+                  alt={ui('about.imageAlt')}
                   width={1000}
                   height={527}
                   loading="lazy"
@@ -184,7 +190,7 @@ export function PublicHomePage() {
               </picture>
             </Reveal>
             <Reveal>
-              <div className="eyebrow-label">О компании</div>
+              <div className="eyebrow-label">{ui('about.eyebrow')}</div>
               <h2>{t('about.heading', 'Одно ателье — от карьера до сданного объекта')}</h2>
               <p>
                 {t(
@@ -194,9 +200,9 @@ export function PublicHomePage() {
               </p>
               <p>{t('about.paragraph2', 'С проектом работает выделенная команда: архитектор проекта, технолог по камню и инженер. Мы говорим на языке чертежей и спецификаций.')}</p>
               <div className="tag-list">
-                <span className="tag">Проектирование и BIM</span>
-                <span className="tag">Собственное производство</span>
-                <span className="tag">Монтаж и шеф-надзор</span>
+                <span className="tag">{ui('about.tag1')}</span>
+                <span className="tag">{ui('about.tag2')}</span>
+                <span className="tag">{ui('about.tag3')}</span>
               </div>
             </Reveal>
           </div>
@@ -204,19 +210,17 @@ export function PublicHomePage() {
 
         <section id="portfolio" className="portfolio-section">
           <div className="wrap">
-            <div className="eyebrow-label">Портфолио</div>
-            <h2 className="portfolio-title">Объекты, которыми мы гордимся</h2>
+            <div className="eyebrow-label">{ui('portfolio.eyebrow')}</div>
+            <h2 className="portfolio-title">{ui('portfolio.heading')}</h2>
 
-            {portfolio.isLoading && <p className="state-message">Загрузка…</p>}
+            {portfolio.isLoading && <p className="state-message">{ui('loading')}</p>}
 
             {portfolio.isError && (
-              <p className="state-message state-message-error">
-                Не удалось загрузить портфолио. Попробуйте обновить страницу или свяжитесь с нами напрямую.
-              </p>
+              <p className="state-message state-message-error">{ui('portfolio.loadError')}</p>
             )}
 
             {portfolio.isSuccess && portfolio.data.length === 0 && (
-              <p className="state-message">Портфолио скоро пополнится новыми объектами.</p>
+              <p className="state-message">{ui('portfolio.empty')}</p>
             )}
 
             <div className="pf">
@@ -246,16 +250,16 @@ export function PublicHomePage() {
         <section id="why" className="why-section">
           <div className="wrap">
             <div className="section-head-main why-head">
-              <div className="eyebrow-label">Почему мы</div>
+              <div className="eyebrow-label">{ui('why.eyebrow')}</div>
               <h2>{t('why.heading', 'Партнёр, на которого можно опереться в проекте')}</h2>
             </div>
             <div className="why2">
-              {[
-                { num: '01', title: 'Единый подрядчик', text: 'Камень, двери и лифты в одном контракте — без стыковочных ошибок между бригадами разных компаний.' },
-                { num: '02', title: 'Язык проекта', text: 'Работаем с чертежами, BIM-моделями и спецификациями. Понимаем архитектора и дизайнера с полуслова.' },
-                { num: '03', title: 'Собственное производство', text: 'Контролируем качество и сроки на каждом этапе — от раскроя слэба до финального монтажа на объекте.' },
-                { num: '04', title: 'Премиум-исполнение', text: 'Ателье-подход и внимание к деталям на уровне частных резиденций и клубных домов.' },
-              ].map((card) => (
+              {([
+                { num: '01', title: ui('why.card1.title'), text: ui('why.card1.text') },
+                { num: '02', title: ui('why.card2.title'), text: ui('why.card2.text') },
+                { num: '03', title: ui('why.card3.title'), text: ui('why.card3.text') },
+                { num: '04', title: ui('why.card4.title'), text: ui('why.card4.text') },
+              ]).map((card) => (
                 <Reveal className="why-card" key={card.num}>
                   <div className="why-num">{card.num}</div>
                   <div className="why-title">{card.title}</div>
@@ -279,7 +283,7 @@ export function PublicHomePage() {
                   <rect x="4" y="18" width="20" height="4" fill="currentColor" />
                 </svg>
               </div>
-              <div className="eyebrow-label eyebrow-label-dark">Контакты</div>
+              <div className="eyebrow-label eyebrow-label-dark">{ui('contacts.eyebrow')}</div>
               <h2>{t('contacts.heading', 'Обсудим ваш проект')}</h2>
               <p>{t('contacts.paragraph', 'Оставьте заявку — архитектор проекта свяжется с вами в течение рабочего дня, чтобы обсудить материалы, сроки и смету.')}</p>
 
@@ -292,7 +296,7 @@ export function PublicHomePage() {
                     href={link.url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    aria-label={`Открыть ${SOCIAL_ICON_LABEL[link.platform] ?? link.platform}`}
+                    aria-label={ui('contacts.socialAria', { platform: SOCIAL_ICON_LABEL[link.platform] ?? link.platform })}
                   >
                     <span>{SOCIAL_ICON_LABEL[link.platform] ?? link.platform}</span>
                   </a>
@@ -309,13 +313,13 @@ export function PublicHomePage() {
               </div>
             </div>
             <div className="contacts-form-wrap">
-              <ContactForm />
+              <ContactForm language={language} />
             </div>
           </div>
         </section>
       </main>
 
-      <SiteFooter />
+      <SiteFooter language={language} />
     </>
   );
 }

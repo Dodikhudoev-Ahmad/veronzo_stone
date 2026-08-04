@@ -9,6 +9,7 @@ import { EmptyState } from '../components/ui/EmptyState';
 import { ErrorState } from '../components/ui/ErrorState';
 import { ConfirmDialog } from '../components/ui/ConfirmDialog';
 import { ImagePreview } from '../components/ui/ImagePreview';
+import { RowActionsMenu } from '../components/ui/RowActionsMenu';
 import { GalleryFormDialog } from '../features/gallery/GalleryFormDialog';
 import { TranslationEditorModal } from '../features/translations/TranslationEditorModal';
 import { TRANSLATION_FIELD_CONFIGS } from '../features/translations/translationFieldConfig';
@@ -130,31 +131,15 @@ export default function GalleryPage() {
       label: '',
       align: 'right',
       render: (g) => (
-        <div className="flex justify-end gap-3">
-          <button
-            type="button"
-            aria-label={`Переводы «${g.title}»`}
-            className="text-accent hover:underline"
-            onClick={() => setTranslationsTarget(g)}
-          >
-            Переводы
-          </button>
-          <button
-            type="button"
-            aria-label={`Изменить «${g.title}»`}
-            className="text-accent hover:underline"
-            onClick={() => setDialogState({ mode: 'edit', item: g })}
-          >
-            Изменить
-          </button>
-          <button
-            type="button"
-            aria-label={`Удалить «${g.title}»`}
-            className="text-error hover:underline"
-            onClick={() => setDeleteTarget(g)}
-          >
-            Удалить
-          </button>
+        <div className="flex justify-end">
+          <RowActionsMenu
+            ariaLabel={`Действия: «${g.title}»`}
+            actions={[
+              { label: 'Переводы', onClick: () => setTranslationsTarget(g) },
+              { label: 'Изменить', onClick: () => setDialogState({ mode: 'edit', item: g }) },
+              { label: 'Удалить', variant: 'danger', onClick: () => setDeleteTarget(g) },
+            ]}
+          />
         </div>
       ),
     },
@@ -172,7 +157,7 @@ export default function GalleryPage() {
           <button
             type="button"
             onClick={() => setDialogState({ mode: 'create' })}
-            className="rounded-pill bg-accent px-4 py-2 text-sm font-semibold text-cream transition hover:brightness-110"
+            className="whitespace-nowrap rounded-pill bg-accent px-4 py-2 text-sm font-semibold text-cream transition hover:brightness-110"
           >
             + Добавить
           </button>

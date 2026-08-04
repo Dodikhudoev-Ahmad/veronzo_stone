@@ -1,4 +1,6 @@
 import type { PublicAttributeFilterDefinition } from './api';
+import type { LanguageCode } from './useLanguage';
+import { useT } from './uiStrings';
 
 interface FilterPanelProps {
   definitions: PublicAttributeFilterDefinition[];
@@ -14,6 +16,7 @@ interface FilterPanelProps {
   // The mobile FilterDrawer already renders its own "Фильтры" dialog title —
   // suppress this panel's own heading there so it isn't shown twice.
   showTitle?: boolean;
+  language: LanguageCode;
 }
 
 // Above this many options, a definition's list collapses behind a native
@@ -34,7 +37,9 @@ export function FilterPanel({
   activeCount,
   idPrefix,
   showTitle = true,
+  language,
 }: FilterPanelProps) {
+  const ui = useT(language);
   const visible = definitions.filter((definition) => definition.options.length > 0);
   if (visible.length === 0) {
     return null;
@@ -45,13 +50,13 @@ export function FilterPanel({
       <div className="filter-panel-header">
         {showTitle && (
           <h2 className="filter-panel-title">
-            Фильтры
+            {ui('filters.title')}
             {activeCount > 0 && <span className="filter-panel-count">{activeCount}</span>}
           </h2>
         )}
         {activeCount > 0 && (
           <button type="button" className="filter-panel-clear" onClick={onClear}>
-            Очистить
+            {ui('filters.clear')}
           </button>
         )}
       </div>
@@ -72,7 +77,7 @@ export function FilterPanel({
             <legend className="filter-group-legend">{definition.name}</legend>
             {definition.options.length > COLLAPSE_THRESHOLD ? (
               <details className="filter-group-collapsible">
-                <summary>Показать все ({definition.options.length})</summary>
+                <summary>{ui('filters.showAll', { n: definition.options.length })}</summary>
                 {options}
               </details>
             ) : (
