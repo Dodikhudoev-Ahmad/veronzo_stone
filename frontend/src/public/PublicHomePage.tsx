@@ -132,10 +132,6 @@ export function PublicHomePage() {
 
             {categories.isLoading && <p className="state-message">{ui('loading')}</p>}
 
-            {categories.isError && (
-              <p className="state-message state-message-error">{ui('catalog.loadError')}</p>
-            )}
-
             {categories.isSuccess && categories.data.filter((c) => CATALOG_CARD_COPY[c.slug]).length === 0 && (
               <p className="state-message">{ui('catalog.unavailable')}</p>
             )}

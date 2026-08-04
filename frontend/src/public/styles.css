@@ -24,6 +24,17 @@
   --ease-premium: cubic-bezier(.16, 1, .3, 1);
   --container-max: 1340px;
   --font-sans: 'Manrope', system-ui, sans-serif;
+
+  /* Small-phone (≤520px) shared grid — one width/rhythm system every
+     section's mobile rules read from, instead of each section inventing
+     its own margin/gap numbers. See "Mobile: unified grid" below. */
+  --mobile-container-width: calc(100% - 32px);
+  --mobile-container-max: 360px;
+  --mobile-section-padding-block: 48px;
+  --mobile-heading-gap: 20px;
+  --mobile-text-gap: 32px;
+  --mobile-card-gap: 16px;
+  --mobile-card-radius: 28px;
 }
 
 /* ---------- Reset & base ---------- */
@@ -981,27 +992,6 @@ body.menu-open {
 
   .stone-card-body h3 {
     font-size: clamp(30px, 9vw, 34px);
-  }
-}
-
-/* ---------- Small-phone tier: one shared card width ----------
-   Direction cards, the hero property photo, and stone-type cards each had
-   their own width formula (and the vw-based ones drifted right of center
-   whenever the page had any horizontal scroll). Below 520px they now all
-   share one fixed, centered container so edges line up across sections. */
-@media (max-width: 520px) {
-  .cat-card,
-  .hero-image,
-  .stone-card-link {
-    width: calc(100% - 32px);
-    max-width: 360px;
-    margin-left: auto;
-    margin-right: auto;
-    box-sizing: border-box;
-  }
-
-  .hero-image {
-    border-radius: 26px;
   }
 }
 
@@ -2950,5 +2940,144 @@ body.menu-open {
 @media (max-width: 640px) {
   .contacts-info .contact-logo img {
     height: 17px;
+  }
+}
+
+/* ---------- Mobile: unified grid (≤520px) ----------
+   Kept last in the file (not next to the sections it touches) so it wins
+   the cascade against every earlier ≤768/≤900/≤480 tier for the same
+   properties — deliberate, not an accident of edit order.
+
+   Every section previously set its own side padding (12/20/46px) and its
+   own card-width formula (some vw-based, which drifts off-center under any
+   horizontal scroll). Below 520px, all of that is replaced by one rule:
+   each section's own side padding is zeroed out, and its content wrapper
+   (the thing that used to be `.wrap`, `.hero`, `.stones-grid`, ...) becomes
+   the single `--mobile-container-*` box that supplies the only left/right
+   gutter on the page. Cards inside then just need `width: 100%` — they
+   inherit the same edges as everything else for free, instead of each
+   carrying its own width/margin override. */
+@media (max-width: 520px) {
+  /* Section outer padding: horizontal gutter now lives on the container
+     below, not here — vertical rhythm is unified too. Each of these has
+     its own unconditional `padding: ... ...` shorthand at the top of the
+     file (class specificity), so the generic `section { padding-block }`
+     that used to live here could never win against it — targeting the
+     same classes directly instead of the element selector. */
+  .hero-section,
+  .catalog-section,
+  .about-section,
+  .portfolio-section,
+  .why-section {
+    padding-left: 0;
+    padding-right: 0;
+    padding-block: var(--mobile-section-padding-block);
+  }
+
+  /* #top (an id, higher specificity than .hero-section above) sets its own
+     padding-top: 40px at the ≤900 tier — needs its own override here too,
+     or it would keep winning regardless of what .hero-section says. */
+  #top {
+    padding-top: var(--mobile-section-padding-block);
+  }
+
+  /* The shared container: each section's content wrapper gets identical
+     width/centering. .contacts is deliberately excluded — it's a bordered
+     panel with its own established mobile treatment, not a plain content
+     column, and wasn't reported as broken. */
+  .hero,
+  .catalog-section > .wrap,
+  .about,
+  .portfolio-section > .wrap,
+  .why-section > .wrap,
+  .stones-grid {
+    width: var(--mobile-container-width);
+    max-width: var(--mobile-container-max);
+    margin-inline: auto;
+    box-sizing: border-box;
+  }
+
+  .stones-grid {
+    padding-inline: 0;
+    padding-block: var(--mobile-section-padding-block);
+    gap: var(--mobile-text-gap);
+  }
+
+  .stones-info {
+    padding-inline: 0;
+  }
+
+  /* Vertical rhythm: heading → text → cards, and the gap between cards,
+     read from the same two numbers everywhere instead of each section's
+     own bespoke margin. */
+  .section-head {
+    gap: var(--mobile-heading-gap);
+    margin-bottom: var(--mobile-text-gap);
+  }
+
+  .why-head {
+    margin-bottom: var(--mobile-heading-gap);
+  }
+
+  .portfolio-title {
+    margin-bottom: var(--mobile-text-gap);
+  }
+
+  .cat3,
+  .why2,
+  .pf,
+  .stones-cards {
+    gap: var(--mobile-card-gap);
+  }
+
+  /* Direction cards ("Камень", "Двери", "Лифты", "Окна") and stone-type
+     cards: one fixed size, filling the shared container above instead of
+     each computing its own width. */
+  .cat-card,
+  .stone-card-link {
+    width: 100%;
+    aspect-ratio: auto;
+    height: 320px;
+    min-height: 0;
+    border-radius: var(--mobile-card-radius);
+  }
+
+  .cat-card-body {
+    padding: 20px;
+  }
+
+  .stone-card-body {
+    left: 20px;
+    right: 20px;
+    bottom: 20px;
+  }
+
+  .hero-image {
+    border-radius: var(--mobile-card-radius);
+  }
+
+  /* White "why us" cards: full container width, not narrow/centered. */
+  .why-card {
+    width: 100%;
+    min-height: 240px;
+    padding: 28px 24px;
+    border-radius: var(--radius-lg);
+  }
+
+  /* Footer becomes the same card as everything above it — same side
+     margins as the catalog cards, own rounded corners, instead of a
+     full-bleed dark bar with the desktop's 46px padding still applied. */
+  .site-footer {
+    width: var(--mobile-container-width);
+    max-width: var(--mobile-container-max);
+    margin-inline: auto;
+    box-sizing: border-box;
+    border-radius: var(--mobile-card-radius);
+    padding: 40px 24px 32px;
+  }
+
+  .footer-cols {
+    flex-direction: column;
+    gap: 28px;
   }
 }
