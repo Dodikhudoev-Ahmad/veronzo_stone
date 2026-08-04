@@ -31,7 +31,7 @@ const STRINGS = {
 
   'hero.ctaPrimary': { ru: 'Смотреть каталог', en: 'View catalog', tg: 'Дидани каталог', fa: 'مشاهده کاتالوگ' },
   'hero.ctaSecondary': { ru: 'Заявка на консультацию', en: 'Request a consultation', tg: 'Дархости машварат', fa: 'درخواست مشاوره' },
-  'hero.imageAlt': { ru: 'Мраморный интерьер Calacatta', en: 'Calacatta marble interior', tg: 'Интерйери мармари Calacatta', fa: 'دکوراسیون داخلی مرمر کالاکاتا' },
+  'hero.imageAlt': { ru: 'Чёрный мрамор Nero Marquina', en: 'Nero Marquina black marble', tg: 'Мармари сиёҳи Nero Marquina', fa: 'مرمر سیاه نرو ماركينا' },
 
   'catalog.eyebrow': { ru: 'Каталог', en: 'Catalog', tg: 'Каталог', fa: 'کاتالوگ' },
   'catalog.heading': {
@@ -94,6 +94,12 @@ const STRINGS = {
     fa: 'در حال حاضر محصولی در این دسته وجود ندارد.',
   },
   'catalog.clearFilters': { ru: 'Очистить фильтры', en: 'Clear filters', tg: 'Тоза кардани филтрҳо', fa: 'پاک کردن فیلترها' },
+  'catalog.selectedType': {
+    ru: 'Вы выбрали: {type}. Показаны все виды камня — нужный отмечен и идёт первым.',
+    en: 'You picked: {type}. All stone types are shown — the one you picked is marked and listed first.',
+    tg: 'Шумо интихоб кардед: {type}. Ҳамаи навъҳои санг нишон дода мешаванд — навъи интихобшуда аввал меояд.',
+    fa: 'شما انتخاب کردید: {type}. همه انواع سنگ نمایش داده می‌شود — نوع انتخابی شما اول قرار دارد.',
+  },
 
   'filters.title': { ru: 'Фильтры', en: 'Filters', tg: 'Филтрҳо', fa: 'فیلترها' },
   'filters.clear': { ru: 'Очистить', en: 'Clear', tg: 'Тоза кардан', fa: 'پاک کردن' },

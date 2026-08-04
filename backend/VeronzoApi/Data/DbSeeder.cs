@@ -113,7 +113,7 @@ public static class DbSeeder
         await SeedSiteContentAsync(db, "hero.title", "Материя выдающихся интерьеров");
         await SeedSiteContentAsync(db, "hero.lede",
             "Натуральный камень, элитные двери и лифтовые решения под единым технадзором — для архитекторов, дизайнеров и премиум-застройщиков.");
-        await SeedSiteContentAsync(db, "hero.imageTag", "CALACATTA · SIGNATURE");
+        await SeedSiteContentAsync(db, "hero.imageTag", "NERO MARQUINA · SIGNATURE");
         await SeedSiteContentAsync(db, "catalog.sectionNote",
             "Четыре направления, единый стандарт качества — от подбора материала до монтажа на объекте.");
         await SeedSiteContentAsync(db, "about.heading", "Одно ателье — от карьера до сданного объекта");

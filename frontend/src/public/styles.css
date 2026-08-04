@@ -437,6 +437,7 @@ body.menu-open {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  object-position: center;
   display: block;
 }
 
@@ -2469,6 +2470,21 @@ body.menu-open {
   .product-card-media img {
     transition: none;
   }
+}
+
+/* Card matching a ?stone_type= hint from the homepage stone cards — a
+   visual highlight only, layered on top of the normal card styling. */
+.product-card-highlighted {
+  border-color: var(--color-accent);
+  box-shadow: 0 0 0 2px var(--color-accent), 0 20px 44px -30px rgba(27, 24, 19, .35);
+}
+
+.catalog-selected-type-note {
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--color-muted-on-light);
+  max-width: 60ch;
+  margin: -8px 0 24px;
 }
 
 /* ---------- Catalog filters (Stage 23c) ---------- */

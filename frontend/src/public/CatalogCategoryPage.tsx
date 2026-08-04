@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import { Link, useParams } from 'react-router-dom';
 import { publicApi, type CatalogFilterState } from './api';
@@ -14,6 +14,14 @@ import { useCatalogFilters } from './useCatalogFilters';
 import { useLanguage } from './useLanguage';
 import { useCanonical, useDocumentTitle, useOpenGraph } from './seo';
 import { useT } from './uiStrings';
+
+// Arrives on this page as a "show me this one first" hint from the homepage
+// stone-type cards (?stone_type=onyx), not a real filter — there is (today)
+// only ever one seeded product per category, so sending it to the API as an
+// actual filter returned "Найдено: 0" for every single value. It's kept out
+// of the API request but left fully alone everywhere else (URL, the filter
+// sidebar's checked state via `filters`) — see `apiFilters` below.
+const NON_FILTERING_PARAMS = ['stone_type'];
 
 export function CatalogCategoryPage() {
   const { categorySlug } = useParams<{ categorySlug: string }>();
@@ -37,14 +45,52 @@ export function CatalogCategoryPage() {
   const { filters, rawFilters, activeCount, toggleValue, applyFilters, clearFilters } =
     useCatalogFilters(attributeDefs.data);
 
+  const apiFilters = useMemo(() => {
+    const next = { ...rawFilters };
+    for (const key of NON_FILTERING_PARAMS) delete next[key];
+    return next;
+  }, [rawFilters]);
+
   const products = useQuery({
-    queryKey: ['public', 'products', categorySlug, language, rawFilters],
-    queryFn: () => publicApi.products(categorySlug!, language, rawFilters),
+    queryKey: ['public', 'products', categorySlug, language, apiFilters],
+    queryFn: () => publicApi.products(categorySlug!, language, apiFilters),
     enabled: !!categorySlug,
     // Keeps the previous grid on screen while a filter change is in flight —
     // only the very first load for a category shows the full skeleton.
     placeholderData: keepPreviousData,
   });
+
+  // The value straight from the URL/filter state (still populated normally —
+  // only the API call above ignores it) plus its human label, used for the
+  // "selected type first" sort and the on-page note below.
+  const selectedStoneTypeValue = filters.stone_type?.[0];
+  const selectedStoneTypeLabel = useMemo(() => {
+    if (!selectedStoneTypeValue) return undefined;
+    const definition = attributeDefs.data?.find((d) => d.key === 'stone_type');
+    return definition?.options.find((o) => o.value === selectedStoneTypeValue)?.label;
+  }, [attributeDefs.data, selectedStoneTypeValue]);
+
+  // Product list rows don't carry attribute data (only the single-product
+  // detail endpoint does), so matching "is this the selected type" against
+  // the title is a best-effort heuristic — it degrades to "no match, no
+  // reorder" rather than breaking anything once real per-type product
+  // titles exist.
+  const isSelectedTypeMatch = useMemo(() => {
+    if (!selectedStoneTypeLabel) return () => false;
+    const needle = selectedStoneTypeLabel.toLowerCase();
+    return (title: string) => title.toLowerCase().includes(needle);
+  }, [selectedStoneTypeLabel]);
+
+  // Scrolls to the toolbar/grid once, the first time a selected-type link
+  // finishes loading — not on every later refetch (filter toggles etc.).
+  const catalogTopRef = useRef<HTMLDivElement>(null);
+  const hasScrolledForType = useRef(false);
+  useEffect(() => {
+    if (selectedStoneTypeValue && !hasScrolledForType.current && !products.isLoading) {
+      hasScrolledForType.current = true;
+      catalogTopRef.current?.scrollIntoView?.({ behavior: 'smooth', block: 'start' });
+    }
+  }, [selectedStoneTypeValue, products.isLoading]);
 
   const category = categories.data?.find((c) => c.slug === categorySlug);
   const cardCopy = categorySlug ? CATALOG_CARD_COPY[categorySlug] : undefined;
@@ -59,8 +105,12 @@ export function CatalogCategoryPage() {
   const filteredProducts = useMemo(() => {
     const items = products.data ?? [];
     const query = search.trim().toLowerCase();
-    return query ? items.filter((p) => p.title.toLowerCase().includes(query)) : items;
-  }, [products.data, search]);
+    const searched = query ? items.filter((p) => p.title.toLowerCase().includes(query)) : items;
+    if (!selectedStoneTypeLabel) return searched;
+    // Stable sort: matches for the selected type move to the front, original
+    // order otherwise preserved.
+    return [...searched].sort((a, b) => Number(isSelectedTypeMatch(b.title)) - Number(isSelectedTypeMatch(a.title)));
+  }, [products.data, search, selectedStoneTypeLabel, isSelectedTypeMatch]);
 
   const visibleDefinitions = useMemo(
     () => (attributeDefs.data ?? []).filter((d) => d.options.length > 0),
@@ -123,7 +173,13 @@ export function CatalogCategoryPage() {
 
         <CategoryHero categorySlug={categorySlug ?? ''} categoryName={category?.name} language={language} />
 
-        <div className="catalog-toolbar">
+        {selectedStoneTypeLabel && (
+          <p className="catalog-selected-type-note">
+            {ui('catalog.selectedType', { type: selectedStoneTypeLabel })}
+          </p>
+        )}
+
+        <div className="catalog-toolbar" ref={catalogTopRef}>
           <label className="catalog-page-search">
             <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
               <circle cx="7" cy="7" r="5.25" stroke="currentColor" strokeWidth="1.4" />
@@ -200,7 +256,14 @@ export function CatalogCategoryPage() {
             {!isInitialLoading && products.isSuccess && filteredProducts.length > 0 && (
               <div className={`product-grid ${isUpdating ? 'is-updating' : ''}`}>
                 {filteredProducts.map((product, index) => (
-                  <ProductCard key={product.id} product={product} categorySlug={categorySlug ?? ''} index={index} language={language} />
+                  <ProductCard
+                    key={product.id}
+                    product={product}
+                    categorySlug={categorySlug ?? ''}
+                    index={index}
+                    language={language}
+                    highlighted={isSelectedTypeMatch(product.title)}
+                  />
                 ))}
               </div>
             )}

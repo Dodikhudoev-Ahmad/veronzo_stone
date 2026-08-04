@@ -15,6 +15,10 @@ interface ProductCardProps {
   categorySlug: string;
   index: number;
   language: LanguageCode;
+  // True when this card matches a `?stone_type=` hint from the homepage
+  // stone cards (CatalogCategoryPage's title-based best-effort match) —
+  // purely a visual highlight, never affects which products load.
+  highlighted?: boolean;
 }
 
 // Shared by the catalog grid (CatalogCategoryPage) and the related-products
@@ -23,11 +27,11 @@ interface ProductCardProps {
 // inside it — the whole card is already one big <a>, and an <a>/<button>
 // inside another <a> is invalid HTML (and would make both targets fight
 // over the same click).
-export function ProductCard({ product, categorySlug, index, language }: ProductCardProps) {
+export function ProductCard({ product, categorySlug, index, language, highlighted }: ProductCardProps) {
   const ui = useT(language);
   return (
     <Reveal
-      className="product-card"
+      className={`product-card${highlighted ? ' product-card-highlighted' : ''}`}
       style={{ '--reveal-index': index % MAX_STAGGER_INDEX } as CSSProperties}
     >
       <Link to={`/catalog/${categorySlug}/${product.id}`} className="product-card-link">

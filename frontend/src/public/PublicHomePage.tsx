@@ -103,9 +103,9 @@ export function PublicHomePage() {
             </div>
             <div className="hero-image">
               <picture>
-                <source srcSet="/assets/images/hero-calacatta.avif" type="image/avif" />
+                <source srcSet="/assets/images/hero-black-marble.avif" type="image/avif" />
                 <img
-                  src="/assets/images/hero-calacatta.webp"
+                  src="/assets/images/hero-black-marble.webp"
                   alt={ui('hero.imageAlt')}
                   width={1400}
                   height={2100}
@@ -113,7 +113,7 @@ export function PublicHomePage() {
                   fetchPriority="high"
                 />
               </picture>
-              <div className="hero-image-tag">{t('hero.imageTag', 'CALACATTA · SIGNATURE')}</div>
+              <div className="hero-image-tag">{t('hero.imageTag', 'NERO MARQUINA · SIGNATURE')}</div>
             </div>
           </div>
         </section>
