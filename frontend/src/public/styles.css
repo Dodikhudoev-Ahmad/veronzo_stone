@@ -658,6 +658,37 @@ body.menu-open {
   color: #a9c4b0;
 }
 
+/* Catalog cards: mobile — .catalog-section's own 46px side padding
+   (higher specificity than the generic `section` mobile rule, so it never
+   got overridden) was leaving cards at ~75% of viewport width. Cards now
+   run near-full-bleed, sized independently of the grid track via an
+   explicit viewport-relative width rather than relying on the 1fr track. */
+@media (max-width: 768px) {
+  .catalog-section {
+    padding-left: 12px;
+    padding-right: 12px;
+  }
+
+  .cat3 {
+    gap: 16px;
+  }
+
+  .cat-card {
+    width: calc(100vw - 24px);
+    max-width: none;
+    margin-inline: auto;
+    aspect-ratio: 0.88 / 1;
+    min-height: 310px;
+    border-radius: 28px;
+  }
+}
+
+@media (max-width: 360px) {
+  .cat-card {
+    border-radius: 24px;
+  }
+}
+
 /* ---------- About ---------- */
 .about-section {
   padding: 96px 46px;
