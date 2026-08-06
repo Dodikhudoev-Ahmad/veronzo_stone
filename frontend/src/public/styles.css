@@ -2640,15 +2640,24 @@ body.menu-open {
      its own unconditional `padding: ... ...` shorthand at the top of the
      file (class specificity), so the generic `section { padding-block }`
      that used to live here could never win against it — targeting the
-     same classes directly instead of the element selector. */
+     same classes directly instead of the element selector.
+     .stones-section is deliberately NOT in this list — unlike the others,
+     .stones-grid has no child wrap-container to take over the horizontal
+     gutter (see the comment below), so zeroing the section's own padding
+     left .stones-info's heading/text flush against the viewport edge with
+     nothing to reintroduce a side margin. Its own ≤767px tier already sets
+     padding-left/right: 12px, which just needs to survive down to ≤520px. */
   .hero-section,
   .catalog-section,
   .about-section,
   .portfolio-section,
-  .why-section,
-  .stones-section {
+  .why-section {
     padding-left: 0;
     padding-right: 0;
+    padding-block: var(--mobile-section-padding-block);
+  }
+
+  .stones-section {
     padding-block: var(--mobile-section-padding-block);
   }
 
