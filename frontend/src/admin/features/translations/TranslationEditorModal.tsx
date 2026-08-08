@@ -17,8 +17,7 @@ interface TranslationEditorModalProps {
 }
 
 // Reusable across every translatable entity: Categories/Products/Portfolio/
-// Gallery today, and Site Content/Hero Stats/SEO Meta/Contact Info once those
-// get real admin pages (see final report — those pages are still placeholders).
+// Gallery/Site Content/Hero Stats/SEO Meta/Contact Info.
 export function TranslationEditorModal({ open, onClose, entity, id, entityTitle, fields }: TranslationEditorModalProps) {
   const [activeLang, setActiveLang] = useState<LanguageCode>('ru');
   const dirtyRef = useRef<Record<LanguageCode, boolean>>({ ru: false, tg: false, en: false, fa: false });

@@ -30,8 +30,8 @@ function useOrganizationJsonLd(contactInfo: PublicContactInfo[] | undefined, soc
         '@context': 'https://schema.org',
         '@type': 'Organization',
         name: 'Veronzo',
-        url: 'https://veronzotj.netlify.app/',
-        logo: 'https://veronzotj.netlify.app/assets/images/logo-veronzo.png',
+        url: window.location.origin + '/',
+        logo: new URL('/assets/images/logo-veronzo.png', window.location.origin).toString(),
         telephone: phone,
         sameAs: (socialLinks ?? []).map((l) => l.url),
       }

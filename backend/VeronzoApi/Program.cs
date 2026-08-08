@@ -20,7 +20,7 @@ var builder = WebApplication.CreateBuilder(args);
 
 const string CorsPolicyName = "Frontend";
 var allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>()
-    ?? ["https://veronzotj.netlify.app"];
+    ?? ["https://extraordinary-charm-production-90f0.up.railway.app"];
 
 builder.Services.AddOpenApi();
 
@@ -226,6 +226,7 @@ using (var scope = app.Services.CreateScope())
     await DbSeeder.SeedCatalogContentAsync(db);
     await DbSeeder.SeedProductAttributesAsync(db);
     await DbSeeder.SeedRussianTranslationsAsync(db);
+    await DbSeeder.FixPlaceholderContactDataAsync(db);
 
     var passwordHasher = scope.ServiceProvider.GetRequiredService<IPasswordHasher<AdminUser>>();
     var seedLogger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();

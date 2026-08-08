@@ -8,7 +8,6 @@ const LABELS: Record<string, string> = {
   gallery: 'Галерея',
   content: 'Контент',
   seo: 'SEO',
-  settings: 'Настройки',
 };
 
 export function Breadcrumbs() {

@@ -99,15 +99,14 @@ public static class DbSeeder
         await SeedHeroStatAsync(db, "объектов сдано", 340, "+", 2);
         await SeedHeroStatAsync(db, "видов камня", 60, "", 3);
 
-        // Targets copied verbatim from index.html — these are placeholders in the
-        // live site, not confirmed real accounts.
-        await SeedSocialLinkAsync(db, "whatsapp", "https://wa.me/70000000000", isVisible: true);
-        await SeedSocialLinkAsync(db, "telegram", "https://t.me/veronzo", isVisible: true);
-        await SeedSocialLinkAsync(db, "instagram", "https://instagram.com/veronzo", isVisible: true);
+        await SeedSocialLinkAsync(db, "whatsapp", "https://wa.me/992872701515", isVisible: true);
+        await SeedSocialLinkAsync(db, "telegram", "https://t.me/+992872701515", isVisible: true);
+        await SeedSocialLinkAsync(db, "instagram", "https://www.instagram.com/v_eronzo/", isVisible: true);
 
-        await SeedContactInfoAsync(db, "Шоурум", "Москва, Кутузовский проспект, 12", 1);
-        await SeedContactInfoAsync(db, "Телефон", "+7 495 000-00-00", 2);
-        await SeedContactInfoAsync(db, "Почта", "project@veronzo.ru", 3);
+        // Real showroom address and email aren't confirmed yet — seed only the
+        // confirmed phone. Add "Шоурум"/"Почта" here once the owner supplies
+        // real values; until then the admin Content page can add them manually.
+        await SeedContactInfoAsync(db, "Телефон", "+992 87 270 1515", 2);
 
         await SeedSiteContentAsync(db, "hero.eyebrow", "Ателье премиум-отделки");
         await SeedSiteContentAsync(db, "hero.title", "Материя выдающихся интерьеров");
@@ -627,6 +626,64 @@ public static class DbSeeder
         }
 
         db.HeroStats.Add(new HeroStat { Label = label, Value = value, Suffix = suffix, SortOrder = sortOrder, IsVisible = true });
+        await db.SaveChangesAsync();
+    }
+
+    // SeedSocialLinkAsync/SeedContactInfoAsync are insert-if-missing so a normal
+    // reseed can never overwrite an admin's edits — but that also means a database
+    // that was already seeded with the old placeholder contacts (real phone/social
+    // values weren't confirmed until now) never picks up the fix from the calls
+    // above. This pass targets exactly those known-placeholder values by exact
+    // match and replaces them with the real ones; any row an admin has since
+    // edited away from the placeholder is left untouched.
+    public static async Task FixPlaceholderContactDataAsync(AppDbContext db)
+    {
+        await FixSocialLinkUrlAsync(db, "whatsapp", "https://wa.me/70000000000", "https://wa.me/992872701515");
+        await FixSocialLinkUrlAsync(db, "telegram", "https://t.me/veronzo", "https://t.me/+992872701515");
+        await FixSocialLinkUrlAsync(db, "instagram", "https://instagram.com/veronzo", "https://www.instagram.com/v_eronzo/");
+        await FixContactInfoValueAsync(db, "Телефон", "+7 495 000-00-00", "+992 87 270 1515");
+
+        // Real showroom address / email were never confirmed — remove the old
+        // placeholder rows rather than leave fake data live. Exact-match only,
+        // so a value an admin has since edited (including a real address/email
+        // they've since added) is never touched.
+        await RemoveContactInfoIfPlaceholderAsync(db, "Шоурум", "Москва, Кутузовский проспект, 12");
+        await RemoveContactInfoIfPlaceholderAsync(db, "Почта", "project@veronzo.ru");
+    }
+
+    private static async Task RemoveContactInfoIfPlaceholderAsync(AppDbContext db, string label, string placeholderValue)
+    {
+        var contact = await db.ContactInfos.FirstOrDefaultAsync(c => c.Label == label && c.Value == placeholderValue);
+        if (contact is null)
+        {
+            return;
+        }
+
+        db.ContactInfos.Remove(contact);
+        await db.SaveChangesAsync();
+    }
+
+    private static async Task FixSocialLinkUrlAsync(AppDbContext db, string platform, string oldUrl, string newUrl)
+    {
+        var link = await db.SocialLinks.FirstOrDefaultAsync(s => s.Platform == platform && s.Url == oldUrl);
+        if (link is null)
+        {
+            return;
+        }
+
+        link.Url = newUrl;
+        await db.SaveChangesAsync();
+    }
+
+    private static async Task FixContactInfoValueAsync(AppDbContext db, string label, string oldValue, string newValue)
+    {
+        var contact = await db.ContactInfos.FirstOrDefaultAsync(c => c.Label == label && c.Value == oldValue);
+        if (contact is null)
+        {
+            return;
+        }
+
+        contact.Value = newValue;
         await db.SaveChangesAsync();
     }
 

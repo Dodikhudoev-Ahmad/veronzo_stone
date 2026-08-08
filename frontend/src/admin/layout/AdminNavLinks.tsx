@@ -11,7 +11,6 @@ export const ADMIN_NAV_ITEMS = [
   { to: '/admin/gallery', label: 'Галерея' },
   { to: '/admin/content', label: 'Контент' },
   { to: '/admin/seo', label: 'SEO' },
-  { to: '/admin/settings', label: 'Настройки' },
 ];
 
 interface AdminNavLinksProps {

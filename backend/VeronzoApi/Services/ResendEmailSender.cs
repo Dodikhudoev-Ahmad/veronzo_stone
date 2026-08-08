@@ -19,7 +19,7 @@ public class ResendEmailSender(HttpClient httpClient, IOptions<ResendOptions> op
         }
 
         var text = $"""
-            Новая заявка с сайта veronzotj.netlify.app
+            Новая заявка с сайта extraordinary-charm-production-90f0.up.railway.app
 
             Имя: {request.Name}
             Телефон/контакт: {request.Contact}

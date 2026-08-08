@@ -15,7 +15,6 @@ const PortfolioPage = lazy(() => import('./pages/PortfolioPage'));
 const GalleryPage = lazy(() => import('./pages/GalleryPage'));
 const ContentPage = lazy(() => import('./pages/ContentPage'));
 const SeoPage = lazy(() => import('./pages/SeoPage'));
-const SettingsPage = lazy(() => import('./pages/SettingsPage'));
 
 export function AdminRouter() {
   return (
@@ -41,7 +40,9 @@ export function AdminRouter() {
           <Route path="gallery" element={<GalleryPage />} />
           <Route path="content" element={<ContentPage />} />
           <Route path="seo" element={<SeoPage />} />
-          <Route path="settings" element={<SettingsPage />} />
+          {/* No backend model backs a settings page yet — redirect stale
+              bookmarks/links to the dashboard instead of a dead placeholder. */}
+          <Route path="settings" element={<Navigate to="/admin" replace />} />
         </Route>
       </Route>
 
