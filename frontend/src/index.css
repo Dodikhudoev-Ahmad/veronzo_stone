@@ -1,5 +1,13 @@
 @import "tailwindcss";
 
+/* Self-hosted fonts (replaces the Google Fonts <link> in index.html, which
+ * was render-blocking on a third-party origin — ~1.7s of FCP on mobile). */
+@import "@fontsource/manrope/300.css";
+@import "@fontsource/manrope/400.css";
+@import "@fontsource/manrope/500.css";
+@import "@fontsource/manrope/600.css";
+@import "@fontsource/cormorant-garamond/600.css";
+
 /*
  * Design tokens copied verbatim from ../css/style.css (the public site's
  * design system) so the admin panel shares the same premium palette/type

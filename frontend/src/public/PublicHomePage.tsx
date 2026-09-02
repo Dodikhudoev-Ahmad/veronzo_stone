@@ -82,7 +82,16 @@ export function PublicHomePage() {
             </div>
             <div className="hero-image">
               <picture>
-                <source srcSet="/assets/images/hero-black-marble.avif" type="image/avif" />
+                <source
+                  srcSet="/assets/images/hero-black-marble-700.avif 700w, /assets/images/hero-black-marble.avif 1400w"
+                  sizes="(min-width: 900px) 570px, calc(100vw - 40px)"
+                  type="image/avif"
+                />
+                <source
+                  srcSet="/assets/images/hero-black-marble-700.webp 700w, /assets/images/hero-black-marble.webp 1400w"
+                  sizes="(min-width: 900px) 570px, calc(100vw - 40px)"
+                  type="image/webp"
+                />
                 <img
                   src="/assets/images/hero-black-marble.webp"
                   alt={ui('hero.imageAlt')}
